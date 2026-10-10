@@ -111,6 +111,22 @@ export function requiredInt(value, field, range) {
 }
 
 /**
+ * An optional date or timestamp, in ISO 8601 form such as `2026-10-01` or `2026-10-01T12:00:00Z`.
+ *
+ * @param {unknown} value
+ * @param {string} field
+ * @returns {string | undefined}
+ */
+export function optionalDate(value, field) {
+  const text = optionalText(value, field);
+  if (text === undefined) return undefined;
+  if (!/^\d{4}-\d{2}-\d{2}/.test(text) || Number.isNaN(Date.parse(text))) {
+    throw new Refused(`\`${field}\` must be an ISO 8601 date such as 2026-10-01 or 2026-10-01T12:00:00Z, got '${text}'.`);
+  }
+  return text;
+}
+
+/**
  * One of a fixed set of words, with the value to use when it is absent.
  *
  * @template {string} T

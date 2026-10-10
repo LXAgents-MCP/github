@@ -39,3 +39,10 @@ export const MAX_WRITE_BYTES = 1_000_000;
 
 /** Entries shown for a directory. GitHub itself stops at 1000. */
 export const MAX_LIST_ENTRIES = 500;
+
+/** Characters of a diff shown to the model, which leaves room in a result for the rest of it. */
+export const MAX_DIFF_CHARS = 20_000;
+
+/** Changed files and commits listed in a result. The totals are always reported. */
+export const MAX_FILES_SHOWN = 100;
+export const MAX_COMMITS_SHOWN = 50;

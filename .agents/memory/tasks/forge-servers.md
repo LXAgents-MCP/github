@@ -230,3 +230,24 @@ the model sees.
 The security model now says plainly that everything these tools read is text someone else wrote.
 
 Tests: 155 passing, none failing.
+
+### Task 8 — feat/commit-tools
+
+Landed. `commit_read`, `commit_list` and `commit_compare`, pinned in `test/surface.js` and documented in
+the surface page and the token table.
+
+Checked against GitHub's REST documentation: the list's filters (`sha`, `path`, `author`, `since`,
+`until`); a commit's `stats`, `parents` and `files` (the files carry a `patch` that binary files lack);
+the diff media type, which takes no paging and can time out on a very large commit; and compare's
+`BASE...HEAD` form, its 250-commit and 300-file limits, and that commits come oldest first. Compare
+shows the most recent 50 commits and the first 100 files and reports the totals; `commit_read` shows
+the first 100 files. Cross-fork comparison (`owner:branch`) is not offered: a reference name may not
+contain a colon.
+
+The renderer changed: a string field with a line break, or too long for a bullet, is now a fenced
+block under its own name, so a commit message keeps its lines instead of being squeezed onto one
+bullet. It applies to every tool; the earlier groups' fields were all short and render as before.
+
+`since` and `until` are checked as ISO 8601 before any request (`optionalDate`).
+
+Tests: 170 passing, none failing.
