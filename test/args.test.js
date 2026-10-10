@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   maybeFlag,
   oneOf,
+  optionalDate,
   optionalFlag,
   optionalInt,
   optionalText,
@@ -78,4 +79,15 @@ test("maybeFlag keeps not-given apart from false", () => {
   assert.equal(maybeFlag(false, "x"), false);
   assert.equal(maybeFlag(true, "x"), true);
   assert.throws(() => maybeFlag("no", "x"), isRefusal(/`x` must be true or false, got string\./));
+});
+
+test("optionalDate takes an ISO 8601 date or timestamp and refuses anything else", () => {
+  assert.equal(optionalDate(undefined, "since"), undefined);
+  assert.equal(optionalDate("  ", "since"), undefined);
+  assert.equal(optionalDate("2026-10-01", "since"), "2026-10-01");
+  assert.equal(optionalDate(" 2026-10-01T12:00:00Z ", "since"), "2026-10-01T12:00:00Z");
+  for (const bad of ["yesterday", "10/01/2026", "2026-13-45", "2026-1-1"]) {
+    assert.throws(() => optionalDate(bad, "since"), isRefusal(/`since` must be an ISO 8601 date/), bad);
+  }
+  assert.throws(() => optionalDate(5, "since"), isRefusal(/`since` must be a string/));
 });

@@ -98,6 +98,14 @@ one, so a change fails if the file moved on in between.
 | `file_update` | update | Replace an existing file's whole content as one commit. Fails if it changed since the sha. |
 | `file_delete` | destroy | Delete one file as one commit. The file stays in history. |
 
+### Commits
+
+| Tool | Kind | Does |
+|---|---|---|
+| `commit_read` | read | Read one commit: message, author, date, parents, and the files it changed with line counts. `diff: true` adds its diff, cut at 20,000 characters. Defaults to the default branch's tip. |
+| `commit_list` | read | List commits, newest first, from a branch, tag or sha; optionally only those touching a path, by an author, or within a date range. Paged. |
+| `commit_compare` | read | Compare two refs: ahead and behind, the most recent 50 commits between them, and the changed files (the first 100) with line counts. |
+
 ## What this server does not expose
 
 | Not exposed | Why |

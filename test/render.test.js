@@ -47,6 +47,15 @@ test("text is fenced as a block after the bullets", () => {
   );
 });
 
+test("a string with a line break, or too long for a bullet, is a block under its own name", () => {
+  assert.equal(
+    renderPayload("Read it.", { sha: "abc", message: "Subject\n\nBody line", note: "short" }),
+    "**Read it.**\n\n- sha: abc\n- note: short\n\n**message**\n```text\nSubject\n\nBody line\n```",
+  );
+  const long = "z".repeat(250);
+  assert.equal(renderPayload("S", { body: long }), `**S**\n\n**body**\n\`\`\`text\n${long}\n\`\`\``);
+});
+
 test("an empty text field adds no block", () => {
   assert.equal(renderPayload("S", { text: "" }), "**S**");
 });

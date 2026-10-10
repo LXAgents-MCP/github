@@ -9,6 +9,8 @@
  * - a list of scalars is one bullet, joined with commas;
  * - a list of rows (`items`, `files`, `commits`, `comments`) is a heading and one bullet per row;
  * - `text` is a block - a file, a log, a diff - fenced so it cannot be mistaken for prose;
+ * - any other string with a line break, or too long for a bullet, is a block under its own name,
+ *   so a commit message or an issue body keeps its lines;
  * - a nested object is left to the structured content.
  */
 import { MAX_OUTPUT } from "./config.js";
@@ -68,7 +70,9 @@ export function renderPayload(summary, fields) {
   for (const [key, value] of Object.entries(fields)) {
     if (value === undefined || value === null) continue;
     if (key === "text" && typeof value === "string") {
-      if (value !== "") blocks.push(value);
+      if (value !== "") blocks.push({ text: value });
+    } else if (typeof value === "string" && (value.includes("\n") || value.length > CELL_MAX)) {
+      blocks.push({ label: key, text: value });
     } else if (Array.isArray(value)) {
       if (value.length === 0) continue;
       if (value.every(isScalar)) bullets.push(`- ${key}: ${value.join(", ")}`);
@@ -82,7 +86,11 @@ export function renderPayload(summary, fields) {
   for (const [key, rows] of lists) {
     parts.push("", `**${key}**`, rows.map((row) => `- ${describe(row)}`).join("\n"));
   }
-  for (const block of blocks) parts.push("", fence(block));
+  for (const { label, text } of blocks) {
+    parts.push("");
+    if (label) parts.push(`**${label}**`);
+    parts.push(fence(text));
+  }
 
   const text = parts.join("\n");
   return text.length > MAX_OUTPUT ? `${text.slice(0, MAX_OUTPUT)}\n... (truncated)` : text;
