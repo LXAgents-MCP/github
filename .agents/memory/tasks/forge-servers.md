@@ -251,3 +251,28 @@ bullet. It applies to every tool; the earlier groups' fields were all short and 
 `since` and `until` are checked as ISO 8601 before any request (`optionalDate`).
 
 Tests: 170 passing, none failing.
+
+### Task 9 — feat/tag-release-tools
+
+Landed. `tag_check`, `tag_get`, `tag_get_all`, `tag_delete`, `release_create`, `release_read`,
+`release_list` and `release_delete`, pinned in `test/surface.js` and documented in the surface page and
+the token table.
+
+Checked against GitHub's REST documentation: creating a release makes the tag from `target_commitish`
+(the default branch if omitted) when it does not exist, and answers 201; getting a release by tag
+returns only published releases, and the latest excludes drafts and prereleases; the list includes
+drafts for a token with push access; deleting answers 204. The documentation does not say that deleting
+a release keeps its tag, which is GitHub's long-standing behaviour; the tools say so, and it is on the
+live-check list. An annotated tag is an object of its own read through `git/tags/{sha}`, and a
+lightweight tag has none, so `tag_get` makes one request or two. `make_latest` exists on create and is
+not offered.
+
+Shape. `src/releases.js` holds `findReleaseByTag`: the direct lookup first, then up to three pages of
+the list, because a draft cannot be fetched by tag and would otherwise be creatable but neither
+readable nor deletable by the name it was created under. `releaseShape`, `releaseFields` and
+`describeRelease` sit beside the repository ones in `src/shapes.js`. `tag_check` passes 404 to its
+handler as an answer, which is what `allow` in `github()` is for.
+
+`release_create` is how a tag is made, since the tool list has no `tag_create`; its description says so.
+
+Tests: 196 passing, none failing.
