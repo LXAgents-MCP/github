@@ -82,3 +82,49 @@ export function describeRepository(fields) {
   const branch = fields.default_branch ? `, default branch ${fields.default_branch}` : "";
   return `${fields.full_name} is a ${fields.visibility} ${archived}${kind}${branch}.`;
 }
+
+/** What every tool that returns a release reports about it. */
+export const releaseShape = {
+  id: z.number(),
+  tag: z.string(),
+  name: z.string().optional(),
+  draft: z.boolean(),
+  prerelease: z.boolean(),
+  html_url: z.string(),
+  published_at: z.string().optional(),
+  body: z.string().optional(),
+  assets: z.array(z.object({ name: z.string(), size: z.number(), downloads: z.number() })),
+};
+
+/**
+ * @param {any} release A release as GitHub returns it.
+ * @returns {z.infer<z.ZodObject<typeof releaseShape>>}
+ */
+export function releaseFields(release) {
+  return {
+    id: release.id,
+    tag: release.tag_name,
+    ...(release.name ? { name: release.name } : {}),
+    draft: Boolean(release.draft),
+    prerelease: Boolean(release.prerelease),
+    html_url: release.html_url,
+    ...(release.published_at ? { published_at: release.published_at } : {}),
+    ...(release.body ? { body: release.body } : {}),
+    assets: (Array.isArray(release.assets) ? release.assets : []).map((asset) => ({
+      name: asset.name,
+      size: asset.size ?? 0,
+      downloads: asset.download_count ?? 0,
+    })),
+  };
+}
+
+/**
+ * One line about a release, for a summary.
+ *
+ * @param {ReturnType<typeof releaseFields>} fields
+ * @returns {string}
+ */
+export function describeRelease(fields) {
+  const kind = fields.draft ? "draft release" : fields.prerelease ? "prerelease" : "release";
+  return `${kind} ${fields.name ?? fields.tag} (tag ${fields.tag})`;
+}

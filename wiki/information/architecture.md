@@ -32,8 +32,7 @@ directions. Two modules with one name stop the process at startup, not at the fi
    output schema.
 7. **`toolResult` renders it.** `src/render.js` turns the payload into the text the model reads —
    scalars as bullets, a list of rows as a heading and bullets, long or multi-line text as a fenced
-   block — and
-   the same fields go in `structuredContent`.
+   block — and the same fields go in `structuredContent`.
 
 A `Refused` is an `isError` result carrying the reason and no structured content, because a client
 validates structured content against the output schema and an empty object would be rejected for

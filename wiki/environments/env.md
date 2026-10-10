@@ -55,6 +55,8 @@ token's `repo` scope is the broadest.
 | `branch_create`, `branch_delete`, `branch_merge` | `repo` | Contents set to write |
 | `file_read`, `directory_list` | `repo` | Contents set to read |
 | `commit_read`, `commit_list`, `commit_compare` | `repo` | Contents set to read |
+| `tag_check`, `tag_get`, `tag_get_all`, `release_read`, `release_list` | `repo` | Contents set to read |
+| `tag_delete`, `release_create`, `release_delete` | `repo` | Contents set to write |
 | `file_create`, `file_update`, `file_delete` | `repo`, plus `workflow` for a file under `.github/workflows/` | Contents set to write, plus Workflows set to write for a file under `.github/workflows/` |
 
 The permissions are listed from GitHub's REST documentation. When a token is short of one, GitHub's

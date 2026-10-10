@@ -106,6 +106,22 @@ one, so a change fails if the file moved on in between.
 | `commit_list` | read | List commits, newest first, from a branch, tag or sha; optionally only those touching a path, by an author, or within a date range. Paged. |
 | `commit_compare` | read | Compare two refs: ahead and behind, the most recent 50 commits between them, and the changed files (the first 100) with line counts. |
 
+### Tags and releases
+
+A tag is created by `release_create`, which makes the tag from a branch or commit when it does not
+exist; there is no separate tag-creating tool.
+
+| Tool | Kind | Does |
+|---|---|---|
+| `tag_check` | read | Say whether a tag exists, and if so what it points at and whether it is annotated. A missing tag is an answer, not an error. |
+| `tag_get` | read | Read one tag: the commit behind it and, for an annotated tag, its message, tagger and date. |
+| `tag_get_all` | read | List tags with the commit each points at. Paged. |
+| `tag_delete` | destroy | Delete a tag. It does not delete a release. |
+| `release_create` | write | Create a release for a tag, as a draft or prerelease if asked, with GitHub-written notes if asked. |
+| `release_read` | read | Read one release by tag, or the latest published one. Finds a draft by tag too, through the list. |
+| `release_list` | read | List releases, newest first, including drafts for a token with push access. Paged. |
+| `release_delete` | destroy | Delete a release by tag or by id. Its tag is kept. |
+
 ## What this server does not expose
 
 | Not exposed | Why |
