@@ -47,9 +47,14 @@ token's `repo` scope is the broadest.
 | Tools | Classic token | Fine-grained token |
 |---|---|---|
 | `repo_create` | `repo` | Administration set to write — and only where GitHub lets a fine-grained token create repositories. On a 403, use a classic token. |
+| `repo_read`, `repo_search` | `repo` for private repositories, `public_repo` for public ones | Metadata set to read, which every fine-grained token has |
+| `repo_update` | `repo` | Administration set to write |
+| `repo_delete` | `delete_repo` | Administration set to write. Either way the token's owner must be an admin of the repository, and an organization can forbid its members to delete. |
+| `repo_fork` | `repo` | GitHub documents no fine-grained permission for this endpoint; use a classic token if a fine-grained one is refused. |
 
-A 403 names this table's question: the refusal says the token lacks permission and, when GitHub
-reports which permission an endpoint accepts, repeats it.
+The permissions are listed from GitHub's REST documentation. When a token is short of one, GitHub's
+refusal says which permission the endpoint accepts and this server repeats it, so the refusal is the
+authority if it disagrees with this table.
 
 ## What configures the server instead
 

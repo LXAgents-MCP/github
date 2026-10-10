@@ -67,6 +67,19 @@ export function optionalFlag(value, field, fallback) {
 }
 
 /**
+ * An optional boolean with no default, so "not given" and "false" stay different.
+ *
+ * @param {unknown} value
+ * @param {string} field
+ * @returns {boolean | undefined}
+ */
+export function maybeFlag(value, field) {
+  if (value === undefined || value === null) return undefined;
+  if (typeof value !== "boolean") throw new Refused(`\`${field}\` must be true or false, got ${typeof value}.`);
+  return value;
+}
+
+/**
  * An optional whole number inside a range.
  *
  * @param {unknown} value

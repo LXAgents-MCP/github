@@ -27,7 +27,9 @@ behaving:
   what the tools in use need, on only the repositories involved.
 * **Annotations** say what kind of change each tool makes, and deletes and merges are marked
   destructive, so a client can ask a person first.
-* **The server cannot make a client ask.** Everything past those two is the person at the client.
+* **`repo_delete` refuses** unless it is told the repository's full name, which makes a
+  copy-and-paste accident or a vague instruction fail.
+* **The server cannot make a client ask.** Everything past those three is the person at the client.
 
 ## Surfaces
 
@@ -48,6 +50,12 @@ behaving:
 | `src/api.js` `parseRepo`, `refName`, `refPath`, `filePath` | Arguments from a model that may be steering on text it read | Validated and percent-encoded; empty, `.` and `..` segments refused; tests cover each |
 | `src/api.js` `github()` | The path handed to it | Must start with `/` and carry no `?` or `#`; a violation is a programming error, not a refusal |
 | `src/config.js` `API_BASE` | The host | A constant: no argument or variable can change it |
+
+### What a call can change
+
+| File | Exposure | Guard |
+|---|---|---|
+| `src/tools/repo-delete.js` | The most destructive tool: it removes a repository with its issues and pull requests | `confirm` must repeat the full name, and a test shows nothing is sent otherwise; annotated `destroy` |
 
 ## Secrets
 
@@ -110,4 +118,5 @@ The whole security posture is one credential handled in one place: it never leav
 except as an `Authorization` header to `api.github.com`, it is scrubbed from every message the
 server can produce, no argument can carry it or redirect a call, and there is no listener for anyone
 else to use it through. What remains is authority — the token can do what it was granted — which is
-why the destructive tools are annotated and why the first advice is to grant less.
+why the destructive tools are annotated, why `repo_delete` asks for the repository's name, and why
+the first advice is to grant less.

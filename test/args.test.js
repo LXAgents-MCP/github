@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  maybeFlag,
   oneOf,
   optionalFlag,
   optionalInt,
@@ -69,4 +70,12 @@ test("textList trims, drops blanks and duplicates, and enforces its bounds", () 
   assert.throws(() => textList("a", "l"), isRefusal(/`l` must be a list of strings\./));
   assert.throws(() => textList([1], "l"), isRefusal(/`l` must be a list of strings\./));
   assert.throws(() => textList(["a", "b", "c"], "l", { max: 2 }), isRefusal(/at most 2 values, got 3/));
+});
+
+test("maybeFlag keeps not-given apart from false", () => {
+  assert.equal(maybeFlag(undefined, "x"), undefined);
+  assert.equal(maybeFlag(null, "x"), undefined);
+  assert.equal(maybeFlag(false, "x"), false);
+  assert.equal(maybeFlag(true, "x"), true);
+  assert.throws(() => maybeFlag("no", "x"), isRefusal(/`x` must be true or false, got string\./));
 });
