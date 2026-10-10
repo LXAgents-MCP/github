@@ -139,7 +139,25 @@ Forward references. Four links in the agent wiki point at human wiki pages that 
 check over `AGENTS.md` and `.agents/` finds no other unresolved link. The project wiki index and
 the logs index are created with the pages they list, in tasks 4 and 14.
 
-The security page is written from the code as it stands and follows the shape the shared security
-creator gives. It will gain a row for each destructive tool as those tools land.
+The security page holds the procedure: the isolation rule, a before-you-change table, what to
+escalate and what is not a finding. Its surfaces tables moved to the human security model in task 4,
+so facts live once.
 
 Nothing here copies the shared set. Tests unchanged: 93 passing, none failing.
+
+### Task 4 — docs/wiki
+
+Landed. `README.md` is an overview that points at the wiki and states no tool count, and seven wiki
+pages sit under a project wiki index: overview, architecture, MCP surface, setup, environment,
+connect-a-client and the security model. `mcp-surface.md` and `env.md` carry the tables that grow:
+each tool group adds its rows to both, and to the README and security model where it changes what
+they say, in the same commit as the tools.
+
+Facts once. The surfaces tables task 3 put in the agent security page now live in the human
+security model; the agent page keeps the isolation rule, the before-you-change table, escalation
+and what is not a finding. Claims about the `repo_delete` name-confirmation guard are left out of
+the README and the security model until task 5 adds the tool, so no page describes code that does
+not exist yet. The overview states scope, not inventory.
+
+A link check over `README.md`, `wiki/`, `AGENTS.md` and `.agents/` finds no unresolved link. The
+human pages say nothing about `.agents/`. Tests unchanged: 93 passing, none failing.
