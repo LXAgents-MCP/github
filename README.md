@@ -30,7 +30,8 @@ tags, releases, issues, pull requests and Actions workflows — through the GitH
   its reset time, a name already taken: each is a sentence, not a status code.
 - **Bounded output.** Lists page at up to 100; a file, a log or a diff is cut at a stated limit and
   says it was cut.
-- **No network in the tests.** `fetch` is replaced and any request a test did not expect fails it.
+- **Nothing leaves the machine in the tests.** `fetch` is replaced and any request a test did not
+  expect fails it; the one exception, a redirect check, talks to two servers on loopback.
 
 ## Quick start
 
@@ -84,6 +85,7 @@ from the tool surface until the session restarts. See
 - [Docker](wiki/environments/docker.md) — the stdio image, which has not yet been built.
 - [Environment](wiki/environments/env.md) — the one variable, and what the token needs.
 - [Connect a client](wiki/guides/connect-a-client.md) — Claude Desktop and Claude Code.
+- [Smoke test](wiki/guides/smoke-test.md) — the first live run, which has not been done yet.
 - [Security model](wiki/security/security-model.md) — the token, the surfaces that touch it, and
   what is deliberately not protected.
 
