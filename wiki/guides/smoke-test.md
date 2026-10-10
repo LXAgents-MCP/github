@@ -99,7 +99,7 @@ differently, the tool named is the one to fix.
 | `workflow_run` | With `return_run_details: true` the pinned API version answers 200 with the run id, or 204 with none — either is handled. An input the workflow does not declare, or a workflow without a dispatch trigger, is a 422; a workflow file not on the default branch is a 404. |
 | `workflow_status` | `per_page=1` on a workflow's runs returns the newest run; a branch name with a slash works in the `branch` filter. |
 | `workflow_logs` | GitHub's 302 to a signed address is followed and the token is not sent there. A job still running gives its partial log or none; an expired log is noted; a log over 20 MB is refused with the general size message. |
-| the image | Build it, run `node src/index.js --version` in it, connect a client with `docker run --rm -i -e LXAGENTS_MCP_GITHUB_API_KEY`, and check that `docker stop` returns at once. See [Docker](../environments/docker.md). |
+| the image | Build it, run `node src/index.js --version` in it, connect a client with `docker run --rm -i -e MCP_AUTH_TOKEN`, and check that `docker stop` returns at once. See [Docker](../environments/docker.md). |
 
 ## Reporting what differs
 

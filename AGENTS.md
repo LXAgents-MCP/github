@@ -2,8 +2,8 @@
 
 This repository is `LXAgents-MCP/github`. It is an MCP server, `lxagents-github`, that gives an
 LLM access to GitHub — repositories, branches, files, commits, tags, releases, issues, pull
-requests and Actions workflows — through the REST API, over stdio. It consumes the shared agent
-instruction set through a connector rather than copying it.
+requests and Actions workflows — through the REST API, over stdio or over HTTP with a bearer token. It
+consumes the shared agent instruction set through a connector rather than copying it.
 
 ## Two sets, two roles
 
