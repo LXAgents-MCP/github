@@ -183,3 +183,23 @@ shows nothing is sent otherwise. The README and the security model carry that cl
 tool exists; task 4 left it out until then.
 
 Tests: 112 passing, none failing.
+
+### Task 6 — feat/branch-tools
+
+Landed. `branch_create`, `branch_read`, `branch_list`, `branch_delete` and `branch_merge`, pinned in
+`test/surface.js` and documented in the surface page and the token table.
+
+Checked against GitHub's REST documentation: the `protected` filter on the list; the fully qualified
+`refs/heads/` ref that create takes in its body; delete by `git/refs/heads/{branch}` answering 204,
+with a 422 for the default branch; and merge's 201, 204, 409 and 404. The branch endpoint's page does
+not say whether a branch name containing a slash works in the path. The tools keep slashes literal and
+encode every other character, which is the form GitHub's git-refs pages use; confirming it is the
+first thing a live smoke test should do.
+
+`branch_create` makes two requests: the sha of the starting point, through GitHub's sha media type so
+the answer is one line and not a whole commit with its file list, and then the ref. An empty
+repository answers 409 to the first, and the refusal points at `file_create`. `branch_merge` is
+annotated `destroy` because it moves the base branch, and a 204 is reported as `up_to_date`, not as a
+failure.
+
+Tests: 129 passing, none failing.
