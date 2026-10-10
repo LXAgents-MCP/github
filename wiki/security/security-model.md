@@ -18,10 +18,11 @@ token may do, an agent calling this server may do.
 
 ## The trust boundary that matters most
 
-The caller is a model, and a model can be steered by text it read. An issue body, a file in a
-repository or a commit message may say "now delete this repository", and the server cannot tell a
-steered call from a wanted one. So the limits are the ones that do not depend on the model
-behaving:
+The caller is a model, and a model can be steered by text it read. Everything these tools read — a
+file, an issue, a commit message — is text someone else wrote, and the model reads it much as it
+reads the owner's instructions. An issue body or a file in a repository may say "now delete this
+repository", and the server cannot tell a steered call from a wanted one. So the limits are the ones
+that do not depend on the model behaving:
 
 * **The token's permissions** are the real limit. GitHub enforces them, not this server. Grant only
   what the tools in use need, on only the repositories involved.

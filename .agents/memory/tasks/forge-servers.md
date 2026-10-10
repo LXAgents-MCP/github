@@ -203,3 +203,25 @@ annotated `destroy` because it moves the base branch, and a 204 is reported as `
 failure.
 
 Tests: 129 passing, none failing.
+
+### Task 7 — feat/file-tools
+
+Landed. `file_read`, `directory_list`, `file_create`, `file_update` and `file_delete`, pinned in
+`test/surface.js` and documented in the surface page and the token table.
+
+Checked against GitHub's REST documentation: the contents endpoint answers an object for a file and an
+array for a directory; above 1 MB the default JSON answer is refused, which the tool turns into a
+refusal that says to use git; a write takes the blob `sha` of the version it replaces, answers 201 for
+a new file and 200 for an update, and a delete answers 200; and GitHub asks that writes to one
+repository are made serially, which one-call-per-tool respects.
+
+Shape. `src/contents.js` holds what the three write tools share: the API path, the base64 encoding
+with a 1 MB ceiling, and `blobSha`, which reads the current sha when a caller did not pass one and
+says what to do instead when there is no such file. `src/text.js` gained `decodeText`, `cli`'s UTF-8
+then Windows-1252 decoder with a byte cut that never leaves half a character, and `looksBinary`.
+`file_read` cuts at 200 000 bytes and says it did; it refuses binary files, directories, symbolic
+links and submodules, each with the tool to use instead.
+
+The security model now says plainly that everything these tools read is text someone else wrote.
+
+Tests: 155 passing, none failing.

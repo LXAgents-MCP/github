@@ -53,6 +53,8 @@ token's `repo` scope is the broadest.
 | `repo_fork` | `repo` | GitHub documents no fine-grained permission for this endpoint; use a classic token if a fine-grained one is refused. |
 | `branch_read`, `branch_list` | `repo` | Contents set to read |
 | `branch_create`, `branch_delete`, `branch_merge` | `repo` | Contents set to write |
+| `file_read`, `directory_list` | `repo` | Contents set to read |
+| `file_create`, `file_update`, `file_delete` | `repo`, plus `workflow` for a file under `.github/workflows/` | Contents set to write, plus Workflows set to write for a file under `.github/workflows/` |
 
 The permissions are listed from GitHub's REST documentation. When a token is short of one, GitHub's
 refusal says which permission the endpoint accepts and this server repeats it, so the refusal is the
