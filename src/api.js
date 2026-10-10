@@ -8,7 +8,7 @@
  * Nothing here writes to stdout: on stdio, stdout is the protocol channel.
  */
 import { optionalInt, rawText, requiredText } from "./args.js";
-import { currentToken, isHttpMode, tokenHome } from "./auth.js";
+import { configuredApiKey } from "./auth.js";
 import {
   API_BASE,
   API_TIMEOUT_MS,
@@ -26,24 +26,23 @@ const JSON_ACCEPT = "application/vnd.github+json";
 /* ------------------------------------------------------------------ the token */
 
 /**
- * The token a call is made with, read when the call is made.
+ * The GitHub token a call is made with, read when the call is made.
  *
  * Read per call and not at startup, so a server without a token still starts and says what is
- * missing when a tool is used. Over stdio it comes from `MCP_AUTH_TOKEN`, set in the `env` block of
- * the client's configuration for this server; over HTTP it is the bearer token of the request being
- * answered, and the environment is never consulted (`src/auth.js`). It is never a tool argument, so
- * it never appears in a prompt or a transcript.
+ * missing when a tool is used. It comes from `GITHUB_API_KEY` in this process's environment, set in
+ * the `env` block of the client's configuration over stdio and in the server's own environment
+ * over HTTP, and is the same on both: the bearer token an HTTP client presents authenticates it to
+ * this server and is never used here (`src/auth.js`). It is never a tool argument, so it never
+ * appears in a prompt or a transcript.
  *
  * @returns {string}
  */
 export function requireToken() {
-  const token = currentToken();
-  if (token !== null) return token;
+  const token = configuredApiKey();
+  if (token) return token;
   throw new Refused(
-    isHttpMode()
-      ? "This request carried no token. Send your GitHub token as `Authorization: Bearer <token>`."
-      : `${TOKEN_ENV} is not set. Add it to the \`env\` block of this server's entry in the ` +
-          "client configuration, then restart the client.",
+    `${TOKEN_ENV} is not set. Add it to the \`env\` block of this server's entry in the ` +
+      "client configuration, or to the environment of the HTTP server process, then restart it.",
   );
 }
 
@@ -330,7 +329,7 @@ function failure({ status, body, headers, what, explain, token }) {
 
   if (message === undefined) {
     if (status === 401) {
-      message = `GitHub rejected the token (401). Check that ${tokenHome()} holds a valid token that has not expired.`;
+      message = `GitHub rejected the token (401). Check that ${TOKEN_ENV} holds a valid token that has not expired.`;
     } else if ((status === 403 || status === 429) && isRateLimited(status, headers, body)) {
       message = `GitHub is rate limiting this token (${status})${detail}. ${whenToRetry(headers)}`;
     } else if (status === 403) {

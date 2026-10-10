@@ -20,8 +20,8 @@ export const TOOL = {
     "Create a new, empty repository on GitHub and return its URLs. Use this when the owner " +
     "asks to start a new GitHub repository, in their own account or in an organization. " +
     "Private unless told otherwise. It only creates: it does not clone, push to, change or " +
-    "delete anything. The token is the server's MCP_AUTH_TOKEN over stdio or the request's " +
-    "bearer token over HTTP, never an argument.",
+    "delete anything. The token is read from the GITHUB_API_KEY environment variable of the " +
+    "server, never from an argument.",
   inputSchema: {
     name: z
       .string()

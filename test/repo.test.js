@@ -28,7 +28,7 @@ const created = (overrides = {}) => ({
 });
 
 test("repo_create: the token variable is the one the owner named", () => {
-  assert.equal(TOKEN_ENV, "MCP_AUTH_TOKEN");
+  assert.equal(TOKEN_ENV, "GITHUB_API_KEY");
   assert.equal(create.name, "repo_create");
   assert.ok(create.description.includes(TOKEN_ENV));
   assert.deepEqual(Object.keys(create.inputSchema), ["name", "org", "description", "private", "auto_init"]);
@@ -109,7 +109,7 @@ test("repo_create: a missing token is a refusal that names the variable, and not
   withoutToken(t);
   const { calls } = mockApi(t, reply(201, created()));
 
-  await assert.rejects(repoCreate({ name: "demo" }), isRefusal(/^MCP_AUTH_TOKEN is not set\./));
+  await assert.rejects(repoCreate({ name: "demo" }), isRefusal(/^GITHUB_API_KEY is not set\./));
   assert.equal(calls.length, 0);
 });
 
@@ -139,7 +139,7 @@ test("repo_create: 401 says the token was rejected", async (t) => {
 
   await assert.rejects(
     repoCreate({ name: "demo" }),
-    isRefusal(/^GitHub rejected the token \(401\)\. Check that MCP_AUTH_TOKEN holds a valid token/),
+    isRefusal(/^GitHub rejected the token \(401\)\. Check that GITHUB_API_KEY holds a valid token/),
   );
 });
 
