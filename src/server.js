@@ -16,10 +16,9 @@ import { SERVER_NAME, VERSION } from "./version.js";
 /** What every client reads at `initialize`, before it has called a single tool. */
 const INSTRUCTIONS =
   "GitHub through its REST API: repositories, branches, files, commits, tags, releases, issues, " +
-  "pull requests and Actions workflows. Every tool needs a GitHub token: MCP_AUTH_TOKEN in this " +
-  "server's environment over stdio, or the Authorization: Bearer header over HTTP. Name a " +
-  "repository as 'owner/name'. Tools that delete or merge are destructive: confirm with the owner " +
-  "before calling them.";
+  "pull requests and Actions workflows. Every tool needs GITHUB_API_KEY in this server's " +
+  "environment. Name a repository as 'owner/name'. Tools that delete or merge are destructive: " +
+  "confirm with the owner before calling them.";
 
 /**
  * Shape a handler's payload into a `tools/call` result.
