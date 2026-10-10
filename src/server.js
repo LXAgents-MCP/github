@@ -6,7 +6,7 @@
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { redact } from "./api.js";
-import { TOKEN_ENV } from "./config.js";
+import { tokenToScrub } from "./auth.js";
 import { Refused } from "./errors.js";
 import { log } from "./log.js";
 import { renderPayload } from "./render.js";
@@ -16,9 +16,10 @@ import { SERVER_NAME, VERSION } from "./version.js";
 /** What every client reads at `initialize`, before it has called a single tool. */
 const INSTRUCTIONS =
   "GitHub through its REST API: repositories, branches, files, commits, tags, releases, issues, " +
-  "pull requests and Actions workflows. Every tool needs LXAGENTS_MCP_GITHUB_API_KEY in this " +
-  "server's environment. Name a repository as 'owner/name'. Tools that delete or merge are " +
-  "destructive: confirm with the owner before calling them.";
+  "pull requests and Actions workflows. Every tool needs a GitHub token: MCP_AUTH_TOKEN in this " +
+  "server's environment over stdio, or the Authorization: Bearer header over HTTP. Name a " +
+  "repository as 'owner/name'. Tools that delete or merge are destructive: confirm with the owner " +
+  "before calling them.";
 
 /**
  * Shape a handler's payload into a `tools/call` result.
@@ -60,7 +61,7 @@ async function callTool(spec, args) {
     }
     // A crash is text nobody wrote for a reader, so it is scrubbed like any other: the token
     // must not reach the log or the client whatever put it into an error message.
-    const secret = process.env[TOKEN_ENV]?.trim() ?? "";
+    const secret = tokenToScrub();
     log(redact(`Handler crashed:\n${error?.stack ?? error}`, secret));
     return toolResult(
       { summary: "Internal Error" },
