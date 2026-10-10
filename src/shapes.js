@@ -186,3 +186,29 @@ export function reviewersOf(pull) {
     ...(Array.isArray(pull?.requested_teams) ? pull.requested_teams : []).map((team) => `team:${team.slug ?? team.name}`),
   ];
 }
+
+/** What the workflow tools report about a job of a run. */
+export const jobShape = {
+  id: z.number(),
+  name: z.string(),
+  status: z.string(),
+  conclusion: z.string().optional(),
+  failed_step: z.string().optional(),
+};
+
+/**
+ * @param {any} job A job as GitHub returns it.
+ * @returns {z.infer<z.ZodObject<typeof jobShape>>} `failed_step` is the first step that failed, which
+ *   is where to look in the job's log.
+ */
+export function jobFields(job) {
+  const steps = Array.isArray(job?.steps) ? job.steps : [];
+  const failed = steps.find((step) => step?.conclusion === "failure" || step?.conclusion === "timed_out");
+  return {
+    id: job.id,
+    name: job.name ?? "",
+    status: job.status ?? "unknown",
+    ...(job.conclusion ? { conclusion: job.conclusion } : {}),
+    ...(failed?.name ? { failed_step: failed.name } : {}),
+  };
+}

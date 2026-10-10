@@ -14,8 +14,8 @@ its `--confine` and `--allow` flags bound the shell tools and do not apply to th
 trust boundaries shared one process.
 
 Split, each server has one job and one boundary. `cli` runs commands and reads files on the host
-and makes no network call of its own. This server calls `api.github.com`, reads no local file and
-runs no command. `repo_create` moved here from `cli`, renamed from `create_github_repo`, with its
+and makes no network call of its own. This server calls `api.github.com` (and, to read a job's log, the
+signed address GitHub redirects to), reads no local file and runs no command. `repo_create` moved here from `cli`, renamed from `create_github_repo`, with its
 arguments and behaviour unchanged. GitLab is the same arrangement in its own repository.
 
 ## What it serves

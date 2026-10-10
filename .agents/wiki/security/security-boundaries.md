@@ -40,9 +40,9 @@ in front of you *before* the reasoning that would violate it, not after.
 
 | About to touch… | Verify before committing |
 |---|---|
-| `requireToken`, `github()`, `callApi` or `failure()` in `src/api.js` | The token still goes only into the `Authorization` header built in `github()`. Every message built from GitHub's text or a network error still passes `redact`. The tests that make GitHub, the network and a handler echo the token still pass — and fail when you remove the redaction, which is worth trying once. |
+| `requireToken`, `github()`, `callApi` or `failure()` in `src/api.js` | The token still goes only into the `Authorization` header built in `github()`. Every message built from GitHub's text or a network error still passes `redact`. The tests that make GitHub, the network and a handler echo the token still pass — and fail when you remove the redaction, which is worth trying once. Redirects are still followed by the runtime and not by hand (nothing sets `redirect` to `manual`), and the redirect test still shows a second host receiving no token. |
 | `callTool` in `src/server.js` | The crash path still redacts both the log line and the returned text. |
-| `parseRepo`, `refName`, `refPath`, `filePath`, or how any tool builds a path | Every path segment still comes from these; empty, `.` and `..` segments are still refused; `github()` still refuses a path with `?` or `#`. |
+| `parseRepo`, `refName`, `refPath`, `filePath`, `workflowName`, or how any tool builds a path | Every path segment still comes from these; empty, `.` and `..` segments are still refused; `github()` still refuses a path with `?` or `#`. |
 | A tool's `inputSchema` | No key names a credential (the registry test fails it), and nothing lets a caller choose the host. |
 | `API_BASE` in `src/config.js`, or any new constant that looks like a host | It is still a constant. |
 | A destructive tool, or any tool's annotations | Its kind in `test/surface.js` is `destroy`, its description tells the client to confirm with the owner, and `repo_delete` still refuses without a matching `confirm`. |

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createServer } from "node:http";
 import test from "node:test";
 import {
   apiDetail,
@@ -12,6 +13,7 @@ import {
   refName,
   refPath,
   requireToken,
+  workflowName,
 } from "../src/api.js";
 import { API_TIMEOUT_MS } from "../src/config.js";
 import { Refused } from "../src/errors.js";
@@ -114,6 +116,46 @@ test("callApi keeps the whole body as text when asked for it raw", async (t) => 
   const { body } = await callApi("https://api.example.com/log", { raw: true });
 
   assert.equal(body, "y".repeat(1000));
+});
+
+test("callApi still decodes an error answer when the body of a good one is asked for raw", async (t) => {
+  t.mock.method(globalThis, "fetch", async () => new Response(JSON.stringify({ message: "Not Found" }), { status: 404 }));
+
+  const { status, body } = await callApi("https://api.example.com/log", { raw: true });
+
+  assert.equal(status, 404);
+  assert.deepEqual(body, { message: "Not Found" });
+});
+
+test("callApi follows a redirect to another host without sending the token there", async (t) => {
+  // A job's log is fetched through a redirect from GitHub to a signed address on another host. The
+  // token is for GitHub alone; this holds the client to dropping it on the hop, over real sockets.
+  const seen = [];
+  const target = createServer((request, response) => {
+    seen.push(request.headers.authorization ?? null);
+    response.end("the log");
+  });
+  await new Promise((resolve) => target.listen(0, "127.0.0.1", resolve));
+  const origin = createServer((request, response) => {
+    response.writeHead(302, { location: `http://127.0.0.1:${target.address().port}/blob` });
+    response.end();
+  });
+  await new Promise((resolve) => origin.listen(0, "127.0.0.1", resolve));
+  t.after(() => {
+    for (const server of [origin, target]) {
+      server.closeAllConnections();
+      server.close();
+    }
+  });
+
+  const { status, body } = await callApi(`http://127.0.0.1:${origin.address().port}/logs`, {
+    raw: true,
+    headers: { Authorization: "Bearer secret" },
+  });
+
+  assert.equal(status, 200);
+  assert.equal(body, "the log");
+  assert.deepEqual(seen, [null]);
 });
 
 test("callApi refuses an answer larger than the client will read", async (t) => {
@@ -380,6 +422,22 @@ test("filePath treats the root as valid only when allowed, and refuses traversal
 });
 
 /* ------------------------------------------------------------------ paging */
+
+test("workflowName reads an id or a file name and drops a leading workflows path", () => {
+  assert.deepEqual(workflowName("ci.yml"), { name: "ci.yml", encoded: "ci.yml" });
+  assert.deepEqual(workflowName(" 161335 "), { name: "161335", encoded: "161335" });
+  assert.deepEqual(workflowName(".github/workflows/release.yaml"), { name: "release.yaml", encoded: "release.yaml" });
+  assert.deepEqual(workflowName("build_and-test.v2.yml", "w"), { name: "build_and-test.v2.yml", encoded: "build_and-test.v2.yml" });
+});
+
+test("workflowName refuses what is not one name, and cannot be steered at another endpoint", () => {
+  for (const value of ["a/b.yml", "../x.yml", "..", ".hidden.yml", "a b.yml", "a?x=1", "a#b", "ci.yml/dispatches", "x".repeat(256)]) {
+    assert.throws(() => workflowName(value), isRefusal(/is not a workflow\. Give its numeric id, or the name of its file/), JSON.stringify(value));
+  }
+  assert.throws(() => workflowName(undefined), isRefusal(/`workflow` is required/));
+  assert.throws(() => workflowName("  "), isRefusal(/`workflow` is required/));
+  assert.throws(() => workflowName(12), isRefusal(/`workflow` must be a string/));
+});
 
 test("pageQuery defaults to the first page of thirty and bounds what it is given", () => {
   assert.deepEqual(pageQuery({}), { page: 1, per_page: 30 });

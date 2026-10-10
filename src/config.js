@@ -46,3 +46,13 @@ export const MAX_DIFF_CHARS = 20_000;
 /** Changed files and commits listed in a result. The totals are always reported. */
 export const MAX_FILES_SHOWN = 100;
 export const MAX_COMMITS_SHOWN = 50;
+
+/**
+ * Characters of job logs shown by one `workflow_logs` call, shared between the jobs it reads, and
+ * the most jobs it reads at once. A failing job's log ends with the reason, so the end is kept.
+ */
+export const MAX_LOG_CHARS = 20_000;
+export const MAX_LOG_JOBS = 5;
+
+/** Inputs one workflow dispatch may carry; GitHub refuses more. */
+export const MAX_DISPATCH_INPUTS = 25;

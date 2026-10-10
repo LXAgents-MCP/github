@@ -12,7 +12,8 @@ repositories, and the token reaches exactly one header, built in exactly one pla
 
 A credentialed API client with no state. It reads no local file but its own `package.json`, runs no
 command, persists nothing and listens on nothing. Its input is tool arguments from a client; its
-output is HTTPS requests to `api.github.com` and results back to the same client. The interesting
+output is HTTPS requests to `api.github.com` — and, to read a job's log, to the signed address GitHub
+redirects that request to — and results back to the same client. The interesting
 risk is not data theft from the server — there is no data in it — but **authority**: whatever the
 token may do, an agent calling this server may do.
 
@@ -48,15 +49,17 @@ that do not depend on the model behaving:
 
 | File | Exposure | Guard |
 |---|---|---|
-| `src/api.js` `parseRepo`, `refName`, `refPath`, `filePath` | Arguments from a model that may be steering on text it read | Validated and percent-encoded; empty, `.` and `..` segments refused; tests cover each |
+| `src/api.js` `parseRepo`, `refName`, `refPath`, `filePath`, `workflowName` | Arguments from a model that may be steering on text it read | Validated and percent-encoded; empty, `.` and `..` segments refused; a workflow is digits or one file name with no slash; tests cover each |
 | `src/api.js` `github()` | The path handed to it | Must start with `/` and carry no `?` or `#`; a violation is a programming error, not a refusal |
 | `src/config.js` `API_BASE` | The host | A constant: no argument or variable can change it |
+| `src/api.js` `callApi` | The address GitHub redirects a job's log to, on another host | The destination comes from GitHub's answer and never from an argument; the runtime follows the redirect and drops the `Authorization` header when the host changes, and a test shows a second host receiving no token, over real sockets |
 
 ### What a call can change
 
 | File | Exposure | Guard |
 |---|---|---|
 | `src/tools/repo-delete.js` | The most destructive tool: it removes a repository with its issues and pull requests | `confirm` must repeat the full name, and a test shows nothing is sent otherwise; annotated `destroy` |
+| `src/tools/workflow-run.js` | Starts a run of any workflow that has a dispatch trigger, and a workflow can deploy, publish or spend money | Annotated `write`, and its description says it runs whatever the workflow does; the token needs Actions set to write, so a token without it cannot start one |
 
 ## Secrets
 
@@ -86,7 +89,8 @@ decision with its own security record.
 |---|---|---|
 | The token never appears in output | `npm test` — the api and server tests that make GitHub, the network and a handler echo it | all pass |
 | No tool takes a credential | `npm test` — the registry test | passes |
-| A path cannot leave its endpoint | `npm test` — the api tests for the four address helpers | pass |
+| A path cannot leave its endpoint | `npm test` — the api tests for the five address helpers | pass |
+| The token is not sent to a redirect target | `npm test` — the `callApi` redirect test | passes |
 | stdout stays silent | `npm test` — the stdio tests for `--help`, `--version` and a bad flag | stdout empty |
 | No listener or HTTP library | ``grep -rn -e "node:http" -e "node:net" -e "node:cluster" -e express src`` | no output |
 | Only two runtime dependencies | `npm ls --omit=dev --depth=0` | the MCP SDK and zod |

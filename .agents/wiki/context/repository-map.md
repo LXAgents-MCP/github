@@ -21,11 +21,13 @@ of the shared instruction set and the **producer** of the tool surface in `src/t
 |---|---|---|
 | `src/index.js` | The one entry point: `--help`, `--version`, the stdio transport, `SIGINT`. | The process contract. |
 | `src/server.js` | Builds one `McpServer`, registers every tool, shapes results, and carries the `instructions` text every client reads at `initialize`. | The protocol surface. |
-| `src/api.js` | The GitHub client: the token, addressing (`parseRepo`, `refName`, `refPath`, `filePath`), `callApi`, `github()`, the wording of every failure, paging. | How a call is addressed, made, or fails. |
+| `src/api.js` | The GitHub client: the token, addressing (`parseRepo`, `refName`, `refPath`, `filePath`, `workflowName`), `callApi`, `github()`, the wording of every failure, paging. | How a call is addressed, made, or fails. |
 | `src/args.js` | Argument checks: text, flags, whole numbers, choices, lists. | A new kind of argument. |
 | `src/render.js` | The one renderer from a payload to the text the model reads. | How a result reads. |
 | `src/schemas.js` | Shared zod fragments (`repoArg`, paging) and the four annotation sets. | A fragment or hint several tools share. |
-| `src/text.js` | `short`, `firstLine`, `head`, `tail`. | Cutting or shortening text. |
+| `src/text.js` | `short`, `firstLine`, `head`, `tail`, `cutText`, `decodeText`, `looksBinary`, `cleanLog`. | Cutting, decoding or cleaning text. |
+| `src/shapes.js` | GitHub's objects as the tools report them — a repository, a release, an issue, a job — each a schema and the function that fills it, and `expectBody`, which checks an answer is the object expected. | A second tool returns an object another already does. |
+| `src/contents.js`, `src/releases.js` | What several tools share: a file's path, encoding and blob sha; finding a release by its tag, drafts included. | Those two subjects. |
 | `src/config.js` | Every constant: the variable name, API base and version pin, timeout, limits. | Changing a limit. |
 | `src/errors.js`, `src/log.js`, `src/version.js` | `Refused`; the stderr logger; `ROOT`, `VERSION` and `SERVER_NAME`. | Rarely. |
 | `src/tools/` | `index.js`, the registry, and one module per tool. | Adding or changing a tool — **a release**. |
