@@ -122,6 +122,23 @@ exist; there is no separate tag-creating tool.
 | `release_list` | read | List releases, newest first, including drafts for a token with push access. Paged. |
 | `release_delete` | destroy | Delete a release by tag or by id. Its tag is kept. |
 
+### Issues
+
+A pull request is an issue to GitHub, so these tools also work on a pull request's number. GitHub
+**silently ignores** labels, assignees and a milestone from a token without push access, and people who
+cannot be assigned, so `issue_open`, `issue_assign` and `issue_label` report what was actually applied
+and name anything that was not.
+
+| Tool | Kind | Does |
+|---|---|---|
+| `issue_open` | write | Open an issue with an optional body, labels, assignees and milestone. |
+| `issue_read` | read | Read one issue: state, author, labels, assignees, milestone and body; `comments: true` adds the first 30 comments. Says when the number is a pull request. |
+| `issue_comment` | write | Add a comment. Says when the conversation is locked. |
+| `issue_close` | update | Close as completed, not planned or a duplicate, optionally commenting first. There is no tool to reopen. |
+| `issue_assign` | update | Add (default), remove or replace assignees. |
+| `issue_label` | update | Add (default), remove or replace labels. |
+| `issue_lock` | update | Lock, with a reason, or unlock. |
+
 ## What this server does not expose
 
 | Not exposed | Why |

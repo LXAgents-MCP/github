@@ -34,10 +34,17 @@ test("a list of rows is a heading and one bullet per row, scalars only", () => {
   );
 });
 
-test("a multi-line or very long value stays on one line in a row", () => {
+test("a long or multi-line field of a row is an indented block under its bullet", () => {
   const long = "x".repeat(300);
-  const text = renderPayload("S", { items: [{ body: "line one\nline two", long }] });
-  assert.match(text, /- body: line one line two · long: x{200}…$/);
+  assert.equal(
+    renderPayload("S", { comments: [{ author: "ada", body: "line one\nline two" }, { author: "bob", body: long }] }),
+    `**S**\n\n**comments**\n- author: ada\n  body:\n  \`\`\`text\n  line one\n  line two\n  \`\`\`\n- author: bob\n  body:\n  \`\`\`text\n  ${long}\n  \`\`\``,
+  );
+});
+
+test("a short field of a row stays on its bullet, and an over-long cell in describe is clipped only for scalars", () => {
+  assert.equal(describe({ a: "short", b: ["x", "y"], c: 3 }), "a: short · b: x, y · c: 3");
+  assert.equal(describe("z".repeat(250)), `${"z".repeat(200)}…`);
 });
 
 test("text is fenced as a block after the bullets", () => {
