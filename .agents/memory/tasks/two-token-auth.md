@@ -28,13 +28,13 @@ with `GITLAB_API_KEY`. The 45 tools do not change. The reference is `shared-inst
 
 | # | Title | Branch | PR |
 |---|---|---|---|
-| 1 | Task record | `chore/two-token-auth-plan` | |
-| 2 | Separate the server token from the GitHub key | `feat/two-token-auth` | |
-| 3 | Setup guide and corrected documentation | `docs/two-token-setup` | |
-| 4 | Release | `release/0.3.0` | |
+| 1 | Task record | `chore/two-token-auth-plan` | [#20](https://github.com/LXAgents-MCP/github/pull/20) |
+| 2 | Separate the server token from the GitHub key | `feat/two-token-auth` | [#21](https://github.com/LXAgents-MCP/github/pull/21) |
+| 3 | Setup guide and corrected documentation | `docs/two-token-setup` | [#22](https://github.com/LXAgents-MCP/github/pull/22) |
+| 4 | Release | `release/0.3.0` | [#23](https://github.com/LXAgents-MCP/github/pull/23) |
 
-Branches stack: task 1 from `master`, task `k` from task `k-1`. The `PR` column is filled by a closing commit
-once the pull requests exist.
+Branches stacked: task 1 from `master`, task `k` from task `k-1`. A rebase merge rewrites commits, so
+each branch was replayed onto the new `master` before its pull request was merged, in order, by rebase.
 
 ## Decisions
 
@@ -49,7 +49,7 @@ recommended option was taken, per the standing instruction.
 | T4 | A missing `GITHUB_API_KEY` does not stop either transport. A tool refuses and names the variable; the HTTP process also says so on stderr at start. Reading per call is unchanged. |
 | T5 | The bearer a client sends is compared and discarded. It is never sent to GitHub, never logged and never put in a result. The GitHub key is never taken from a request. |
 | T6 | The comparison hashes both values with SHA-256 and compares the digests in constant time, so neither length nor a correct prefix shows in the timing. |
-| T7 | The release is `0.3.0`: both variable names change again, which breaks 0.2.0 registrations. **Not approved by the owner in so many words**; chosen under the standing instruction and stated to them with the plan. No git tag, nothing published. |
+| T7 | The release is `0.3.0`: both variable names change again, which breaks 0.2.0 registrations. Chosen under the standing instruction and stated to the owner with the plan; **approved by the owner before the merge** ("Use the recommend. Create pr and merge all branch in-order. Do rebase too."). No git tag, nothing published. |
 | T8 | The name `MCP_AUTH_TOKEN` now means here what it means in `shared-instruction`. D10's hazard (a value meant for one server inherited by the other and sent to GitHub) is gone for stdio, which does not read it. What remains is two HTTP servers given one value, which the documentation advises against. |
 | T9 | Consequence, recorded because the earlier decision rested on it: every holder of `MCP_AUTH_TOKEN` acts as the owner of `GITHUB_API_KEY`, `repo_delete` included, and there is no identity per caller. Mitigations: give the key the least scope that works, bind loopback by default, require a 32-character secret, terminate TLS in front, and rotate by restart. |
 
@@ -123,7 +123,7 @@ left it.
 ### Task 4 — release/0.3.0
 
 Landed. The version is `0.3.0` in `package.json` and the lockfile's own two entries (T7: chosen under the standing
-instruction, not approved by the owner in so many words, and stated to them with the plan). `wiki/logs/0/3/0/CHANGELOG.md`
+instruction and stated to the owner with the plan, then approved by them before the merge). `wiki/logs/0/3/0/CHANGELOG.md`
 says first what changed and that `MCP_AUTH_TOKEN` now means something different from 0.2.0, then the cost (every
 holder of the access token acts as the key's owner), then what clients must do over stdio and over HTTP. Its row is
 first in `index/logs-index.md`. The `0.2.0` changelog and its row are left as written. The smoke test's HTTP walk
@@ -134,3 +134,10 @@ Checked from a clean export of the index, with `npm ci`: 307 tests pass and none
 
 The `PR` column of the table is filled by a closing commit once the pull requests exist, so no earlier branch needs
 a rebase.
+
+## Closing
+
+The four pull requests were merged in order by rebase, after the owner approved `0.3.0` and the merge (T7). After the
+last, `master` was identical in tree to the original `release/0.3.0` tip, and 307 tests passed from a clean install
+with `--version` printing `0.3.0`. The merged branches were not deleted, because the git proxy refuses it; the owner
+deletes them.
