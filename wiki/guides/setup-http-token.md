@@ -56,7 +56,7 @@ npm run start:http
 It prints:
 
 ```text
-lxagents-github <version> serving over http on http://127.0.0.1:3001/mcp
+lxagents-github <version> serving over http on :3000/mcp (all interfaces)
 the access token in MCP_AUTH_TOKEN is required on every route except GET /healthz.
 ```
 
@@ -71,8 +71,8 @@ starts, says so on stderr, and every tool refuses naming the variable until it i
 |---|---|---|
 | `GITHUB_API_KEY` | none | The GitHub token. Required for any tool to work. |
 | `MCP_AUTH_TOKEN` | none, **required** | The access token. At least 32 characters. HTTP will not start without it. |
-| `PORT` | `3001` | The port to listen on. The GitLab server defaults to `3002` and `shared-instruction` to `3000`, so all three can run together. |
-| `HOST` | `127.0.0.1` | The interface to listen on. Loopback only, by default. |
+| `PORT` | `3000` | The port to listen on, the same default as `shared-instruction` and the GitLab server. To run more than one on a machine, give all but one its own `PORT`. |
+| `HOST` | `0.0.0.0` | The interface to listen on: every one, by default, as `shared-instruction` does. `HOST=127.0.0.1` keeps it to this machine. |
 | `MCP_TRANSPORT` | `stdio` | `http` (or `streamable-http`) selects this transport when you start `src/index.js`. |
 
 ```bash
@@ -82,14 +82,14 @@ PORT=8080 npm run start:http
 ## 4. Check it with curl
 
 ```bash
-curl http://127.0.0.1:3001/healthz
+curl http://127.0.0.1:3000/healthz
 # {"status":"ok","server":"lxagents-github","version":"<version>"}
 
-curl -i -X POST http://127.0.0.1:3001/mcp
+curl -i -X POST http://127.0.0.1:3000/mcp
 # HTTP/1.1 401 Unauthorized
 # WWW-Authenticate: Bearer realm="mcp"
 
-curl -X POST http://127.0.0.1:3001/mcp \
+curl -X POST http://127.0.0.1:3000/mcp \
   -H "Authorization: Bearer $MCP_AUTH_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
@@ -107,7 +107,7 @@ Claude Code:
 
 ```bash
 export LXAGENTS_GITHUB_ACCESS=<the access token>
-claude mcp add --transport http lxagents-github http://127.0.0.1:3001/mcp \
+claude mcp add --transport http lxagents-github http://127.0.0.1:3000/mcp \
   --header "Authorization: Bearer $LXAGENTS_GITHUB_ACCESS"
 ```
 
@@ -118,7 +118,7 @@ Or commit a project `.mcp.json` that reads the token from the environment instea
   "mcpServers": {
     "lxagents-github": {
       "type": "http",
-      "url": "http://127.0.0.1:3001/mcp",
+      "url": "http://127.0.0.1:3000/mcp",
       "headers": { "Authorization": "Bearer ${LXAGENTS_GITHUB_ACCESS}" }
     }
   }
@@ -128,16 +128,20 @@ Or commit a project `.mcp.json` that reads the token from the environment instea
 The client fills in `${LXAGENTS_GITHUB_ACCESS}` from its own environment. Then **restart the client**: it loads
 its server list at session start, so a server added mid-session is absent until it restarts.
 
-## 6. Putting it on a network
+## 6. Who can reach it
 
-The default is loopback, so only this machine can reach it. To reach it from another machine:
+**By default, anyone who can reach the machine.** The server listens on every interface, so the port is open on
+whatever network the machine is on from the first start. What stands between that network and your GitHub key is
+the access token: the server refuses to start without one of at least 32 characters, and refuses every request
+that does not carry it. To keep it to this machine, set `HOST=127.0.0.1`.
 
-1. Set `HOST` to an interface that machine can reach, or to `0.0.0.0`.
-2. **Put TLS in front.** The access token travels in the `Authorization` header of every request, and over
-   plain `http` anyone on the path can read it and then act as the owner of the GitHub key. This server does
-   not terminate TLS; put a reverse proxy or load balancer that does (nginx, Caddy, a cloud load balancer) in
-   front, and give clients the `https://` URL.
-3. Treat the port as reachable by anyone: a request needs the access token to do anything, and the token is only
+To reach it from another machine, or to leave it open as it is:
+
+1. **Put TLS in front** of any network you do not trust. The access token travels in the `Authorization` header of
+   every request, and over plain `http` anyone on the path can read it and then act as the owner of the GitHub
+   key. This server does not terminate TLS; put a reverse proxy or load balancer that does (nginx, Caddy, a cloud
+   load balancer) in front, and give clients the `https://` URL.
+2. Treat the port as reachable by anyone: a request needs the access token to do anything, and the token is only
    as private as the path it travelled.
 
 There is no allow-list for the `Host` header and no rate limit in this server. GitHub limits the key, and a
@@ -145,16 +149,17 @@ request body is capped at 4 MB.
 
 ## 7. In a container
 
-The image starts stdio by default. To serve HTTP from it, select the transport, bind the interface the
-published port reaches, and pass both variables by name so the values never sit in the command:
+The image starts stdio by default. To serve HTTP from it, select the transport and pass both variables by name so
+the values never sit in the command:
 
 ```bash
-docker run --rm -p 127.0.0.1:3001:3001 -e MCP_TRANSPORT=http -e HOST=0.0.0.0 \
+docker run --rm -p 127.0.0.1:3000:3000 -e MCP_TRANSPORT=http \
   -e GITHUB_API_KEY -e MCP_AUTH_TOKEN "lxagents-github:$VERSION"
 ```
 
-`HOST=0.0.0.0` is for inside the container, where loopback cannot be reached through a published port;
-`127.0.0.1:` in `-p` keeps it reachable from this host only. See [Docker](../environments/docker.md).
+Inside the container the server already listens on every interface, which is what lets a published port reach it,
+so `HOST` needs no setting. `127.0.0.1:` in `-p` keeps the port reachable from this host only; leave it off to
+publish the port to the network. See [Docker](../environments/docker.md).
 
 ## What this means for who can do what
 
@@ -163,6 +168,13 @@ holds it acts as the owner of `GITHUB_API_KEY`: the same permissions, the same i
 `repo_delete` included. To keep identities or permissions apart, run one server per person or per role, each
 with its own key and its own access token. To cut every client off at once, change `MCP_AUTH_TOKEN` and
 restart the server.
+
+## If you used 0.3.0
+
+The defaults moved to `shared-instruction`'s. HTTP used to listen on `127.0.0.1:3001` (GitLab: `3002`); it now
+listens on `0.0.0.0:3000`. Change the URL in each client from port `3001` (or `3002`) to `3000`, or set `PORT` to
+the old value. If you relied on loopback, set `HOST=127.0.0.1`; in a container, drop `-e HOST=0.0.0.0`, which is
+no longer needed. Nothing else changed: the two tokens are the same.
 
 ## If you used 0.2.0
 
@@ -191,7 +203,7 @@ A stdio registration still carrying `MCP_AUTH_TOKEN` starts, and its first tool 
 | `406` or a client error about content types | The request lacks `Accept: application/json, text/event-stream` | Send both |
 | `404` | A path other than `/mcp` | Use `/mcp` |
 | `413` | A body over 4 MB | Send less |
-| `could not listen on 127.0.0.1:3001` | The port is taken | Set `PORT` |
+| `could not listen on 0.0.0.0:3000` | The port is taken, for example by another server on the same machine | Set `PORT` |
 | `PORT must be a whole number` | `PORT` is not a port | Fix it |
 | The log says `GITHUB_API_KEY is not set in this process's environment` | The server was started without a key | Set it and restart; tools refuse until then |
 

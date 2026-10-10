@@ -7,8 +7,8 @@ tags, releases, issues, pull requests and Actions workflows — through the GitH
 - **Package:** `@lxagents-mcp/github` — private; not published to npm.
 - **Transport:** stdio by default: the client starts the server as a subprocess and talks to it through
   a pipe. HTTP with `MCP_TRANSPORT=http`, where every request carries the server's access token as
-  `Authorization: Bearer <token>`; it will not start without one, listens on loopback unless told
-  otherwise, and needs TLS in front before it faces a network.
+  `Authorization: Bearer <token>`; it will not start without one, listens on port 3000 on all interfaces
+  unless told otherwise, and needs TLS in front before it faces a network.
 - **Surface:** one tool per module in `src/tools/`, named by what it acts on and what it does
   (`repo_create`, `branch_list`, `pr_merge`, …). Every tool that acts on a repository takes one
   `repo` argument, `owner/name`. The list is in [MCP surface](wiki/reference/mcp-surface.md).
@@ -53,7 +53,7 @@ Or over HTTP, where clients present an access token of your making (see
 [Set up HTTP with two tokens](wiki/guides/setup-http-token.md)):
 
 ```bash
-GITHUB_API_KEY=<token> MCP_AUTH_TOKEN=$(openssl rand -hex 32) npm run start:http   # http://127.0.0.1:3001/mcp
+GITHUB_API_KEY=<token> MCP_AUTH_TOKEN=$(openssl rand -hex 32) npm run start:http   # port 3000, all interfaces
 ```
 
 Or drive it by hand with the MCP Inspector:
