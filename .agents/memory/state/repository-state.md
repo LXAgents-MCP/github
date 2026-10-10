@@ -28,4 +28,4 @@ exercised against live GitHub:** the environment the work was done in could not 
 and against mocks only. A first smoke test is the owner's.
 
 **Not built.** No CI. No HTTP transport (decision `stdio-only-transport.md`). No GitHub Enterprise.
-Not published to npm (`private: true`). No container image yet.
+Not published to npm (`private: true`). A `Dockerfile` for a stdio image exists and has never been built.
