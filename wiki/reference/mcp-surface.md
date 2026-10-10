@@ -139,6 +139,22 @@ and name anything that was not.
 | `issue_label` | update | Add (default), remove or replace labels. |
 | `issue_lock` | update | Lock, with a reason, or unlock. |
 
+### Pull requests
+
+A pull request's conversation is its issue's, so `pr_comment` writes the same comments `issue_read`
+shows. `pr_merge` is the one tool here that moves a branch: it is `destroy`, and the server's
+instructions tell a client to confirm it with the owner first.
+
+| Tool | Kind | Does |
+|---|---|---|
+| `pr_open` | write | Open a pull request from a branch into a base branch (default: the default branch), as a draft if asked. A branch in a fork is `owner:branch`. Says when one is already open or the branches do not differ. |
+| `pr_read` | read | Read one pull request: state, draft, merged, whether it can be merged, branches, size, labels, requested reviewers and description; `files: true` adds the first 100 changed files without their diffs. Says so when GitHub has not yet worked out mergeability, rather than answering no. |
+| `pr_comment` | write | Add a comment to the conversation. It is not attached to a line of the diff and is not a review. Says when the conversation is locked. |
+| `pr_close` | update | Close without merging, optionally commenting first. The branch is kept. There is no tool to reopen. |
+| `pr_merge` | destroy | Merge by merge commit (default), squash or rebase. Pass `sha` to merge only if the branch is still at the commit that was reviewed. Says why when GitHub refuses (conflicts, checks, approvals, a disabled method, a merge queue). |
+| `pr_review_request` | update | Ask people, teams or both to review. They must be collaborators and cannot be the author. |
+| `pr_approve` | write | Approve as the token's user, with an optional message. A person cannot approve their own pull request. |
+
 ## What this server does not expose
 
 | Not exposed | Why |

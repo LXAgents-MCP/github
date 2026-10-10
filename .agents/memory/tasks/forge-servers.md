@@ -300,3 +300,33 @@ line. Short rows are unchanged.
 already posted. There is no reopen tool, as the owner's list has none.
 
 Tests: 222 passing, none failing.
+
+### Task 11 — feat/pr-tools
+
+Landed. `pr_open`, `pr_read`, `pr_comment`, `pr_close`, `pr_merge`, `pr_review_request` and
+`pr_approve`, pinned in `test/surface.js` and documented in the surface page and the token table.
+
+Checked against GitHub's REST documentation: opening a pull request needs a title, a head and a base,
+answers 201 and rejects with 422 when one is already open for the pair or the branches have no commit
+between them; the head is `branch`, or `owner:branch` for a branch in a fork. Reading one returns
+`mergeable` as `null` while GitHub works it out in the background, so `pr_read` leaves it out and says it
+is still being computed rather than reporting "not mergeable"; the changed files come from their own
+endpoint, at most 100 a page. A pull request's conversation comments are its issue's, so `pr_comment`
+posts to `issues/{n}/comments`. Closing is an update of `state`. Merging is a PUT that takes
+`merge_method`, an optional commit title and message and an optional `sha` the head must still match;
+it answers 200, 405 when the pull request is not mergeable and 409 when the head moved, and both are
+explained. Requesting reviewers answers 201 and 422 when a reviewer is not a collaborator or is the
+author. An approval is a review with the event `APPROVE`, with an optional body; GitHub answers 422 when
+the token's user opened the pull request.
+
+Shape. `headRef` in `pr-open.js` allows `owner:branch` and applies the ordinary reference checks to the
+branch half, so a colon only ever reaches the request body, never a URL. `reviewersOf` in
+`src/shapes.js` joins a pull request's requested people and teams. `pr_close` posts its optional comment first and, as `issue_close`
+does, says the comment was already posted if closing then fails. `pr_merge` is `destroy`; a body that
+answers 2xx but not `merged: true` is returned as a refusal, not as a success.
+
+Not offered, because the owner's list has no row for them: listing pull requests, reopening, inline
+review comments, requesting changes, dismissing a review, enabling auto-merge, and updating a pull
+request's branch.
+
+Tests: 246 passing, none failing.

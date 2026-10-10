@@ -178,3 +178,11 @@ export function issueFields(issue) {
     ...(issue.body ? { body: issue.body } : {}),
   };
 }
+
+/** The people and teams a review has been requested from, as one list; a team is `team:slug`. */
+export function reviewersOf(pull) {
+  return [
+    ...namesOf(pull?.requested_reviewers),
+    ...(Array.isArray(pull?.requested_teams) ? pull.requested_teams : []).map((team) => `team:${team.slug ?? team.name}`),
+  ];
+}
