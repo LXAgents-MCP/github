@@ -80,3 +80,38 @@ so the memory index has a parent, and `.gitignore`. The repository had no `.giti
 `/.agents/plans/` line keeps the untracked working plan out of history, and the owner approved
 adding it with the plan. The root index lists only the memory index for now; task 3 completes
 it. Nothing else changes in this task, and no code exists yet. The `PR` column is filled by task 14.
+
+### Task 2 — feat/server-core
+
+Landed. `node src/index.js` is a stdio MCP server named `lxagents-github` that serves one tool,
+`repo_create`, the `create_github_repo` tool moved out of `cli` 2.1.0 with its arguments, defaults
+and refusal wording unchanged. `package.json` is `private`, at `0.0.0` until the release task, with
+the same two runtime dependencies as `cli`; the lockfile started from `cli`'s so the audited
+dependency set is the same.
+
+Shape. `src/api.js` is the only place a URL is built: `parseRepo`, `refName`/`refPath` and
+`filePath` validate and percent-encode every path segment, so an argument cannot steer a call at
+another endpoint. `github()` pins the API version, reads the token per call, and turns every
+failure into one message that names the next step; a tool may word the statuses it knows better
+through `explain`, which is how `repo_create` keeps its old messages. `callApi` is `cli`'s helper
+with the response headers added, a raw mode for logs and diffs, and a cap on how much of an answer
+it will read. `src/render.js` is one generic renderer for every tool: scalars become bullets, a
+list of rows becomes a heading and bullets, and `text` becomes a fenced block. It replaces `cli`'s
+per-shape branches, so the text of a `repo_create` result is now a bullet list and no longer
+the two-line URL form. `src/tools/index.js` is `cli`'s registry unchanged.
+
+Deviation from the plan, recorded: the argument and error helpers live in `src/` (`args.js`,
+`errors.js`, `text.js`, `schemas.js`) and not in `src/tools/common.js`, so `src/tools/` holds only
+tools and the registry test can hold files and tools together in both directions without an
+exemption list.
+
+Pinned. `test/surface.js` is the one place the tool list is written out, each tool tagged read,
+write, update or destroy. The registry, protocol and stdio tests all compare against it, and the
+registry test holds each tool's annotations to its kind. Adding a tool is therefore one file in
+`src/tools/`, one line there, and its tests.
+
+Tests: the runner reports 92 passing and none failing. Two of those are the support files under
+`test/`, which `node --test` also executes and counts. No test touches the network.
+
+Left for later tasks: the other 44 tools (tasks 5-12), the instruction set and wiki (3, 4), the
+image (13) and the release (14).
