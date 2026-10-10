@@ -13,26 +13,34 @@ export function firstLine(message) {
 /**
  * Decode bytes as text: UTF-8 when they are valid UTF-8, Windows-1252 when they are not.
  *
- * The byte order mark is kept (`ignoreBOM`), so a caller that cares can strip it explicitly. With
- * `max`, only the first `max` bytes are decoded, and a character the cut split is dropped
- * instead of shown as a replacement mark.
+ * The byte order mark is kept (`ignoreBOM`), so a caller that cares can strip it explicitly.
  *
  * @param {Uint8Array} bytes
- * @param {{ max?: number }} [options]
- * @returns {{ text: string, truncated: boolean }}
+ * @returns {string}
  */
-export function decodeText(bytes, { max } = {}) {
+export function decodeText(bytes) {
   let encoding = "utf-8";
   try {
     new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   } catch {
     encoding = "windows-1252";
   }
+  return new TextDecoder(encoding, { ignoreBOM: true }).decode(bytes);
+}
 
-  const truncated = max !== undefined && bytes.length > max;
-  let text = new TextDecoder(encoding, { ignoreBOM: true }).decode(truncated ? bytes.subarray(0, max) : bytes);
-  if (truncated && encoding === "utf-8") text = text.replace(/\uFFFD$/, "");
-  return { text, truncated };
+/**
+ * Cut text to a number of characters, never leaving half of a surrogate pair at the cut.
+ *
+ * @param {string} text
+ * @param {number} max
+ * @returns {[string, boolean]} The text and whether it was cut.
+ */
+export function cutText(text, max) {
+  if (text.length <= max) return [text, false];
+  let end = max;
+  const last = text.charCodeAt(end - 1);
+  if (last >= 0xd800 && last <= 0xdbff) end -= 1;
+  return [text.slice(0, end), true];
 }
 
 /** Does this look like binary data? A NUL byte early on is the usual tell. */
