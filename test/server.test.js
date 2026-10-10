@@ -6,7 +6,7 @@ import { createServer, toolResult } from "../src/server.js";
 import { get } from "../src/tools/index.js";
 import { SERVER_NAME, VERSION } from "../src/version.js";
 import { KIND_HINTS, SURFACE, TOOL_NAMES } from "./surface.js";
-import { mockApi, reply, withToken, withoutToken } from "./helpers.js";
+import { TOKEN, mockApi, reply, withToken, withoutToken } from "./helpers.js";
 
 /** A client connected to a fresh server over an in-memory pipe. */
 async function connect(t) {
@@ -136,6 +136,27 @@ test("a handler that crashes is reported as an internal error and the server car
   spec.handle = original;
   const after = await client.callTool({ name: "repo_create", arguments: { name: "demo" } });
   assert.match(text(after), /^\*\*Refused\*\*/);
+});
+
+test("a crash never carries the token, in the result or in the log", async (t) => {
+  withToken(t);
+  const client = await connect(t);
+  const spec = get("repo_create");
+  const original = spec.handle;
+  spec.handle = async () => {
+    throw new Error(`upstream said ${TOKEN}`);
+  };
+  t.after(() => {
+    spec.handle = original;
+  });
+  const written = t.mock.method(process.stderr, "write", () => true);
+
+  const result = await client.callTool({ name: "repo_create", arguments: { name: "demo" } });
+
+  assert.equal(result.isError, true);
+  assert.equal(text(result), "**Internal Error**\n\nError: upstream said ***");
+  assert.ok(written.mock.calls.every((call) => !String(call.arguments[0]).includes(TOKEN)));
+  assert.match(written.mock.calls[0].arguments[0], /upstream said \*\*\*/);
 });
 
 test("toolResult renders a success and a refusal", () => {

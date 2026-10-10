@@ -110,7 +110,10 @@ write, update or destroy. The registry, protocol and stdio tests all compare aga
 registry test holds each tool's annotations to its kind. Adding a tool is therefore one file in
 `src/tools/`, one line there, and its tests.
 
-Tests: the runner reports 92 passing and none failing. Two of those are the support files under
+A crash is scrubbed like a refusal: the unexpected-exception path redacts the token from both the
+log line and the text returned to the client, with a test that makes a handler throw the token.
+
+Tests: the runner reports 93 passing and none failing. Two of those are the support files under
 `test/`, which `node --test` also executes and counts. No test touches the network.
 
 Left for later tasks: the other 44 tools (tasks 5-12), the instruction set and wiki (3, 4), the

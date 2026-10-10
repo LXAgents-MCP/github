@@ -5,6 +5,8 @@
  * The tool surface is not written here - it is whatever `src/tools/` discovers.
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { redact } from "./api.js";
+import { TOKEN_ENV } from "./config.js";
 import { Refused } from "./errors.js";
 import { log } from "./log.js";
 import { renderPayload } from "./render.js";
@@ -56,11 +58,14 @@ async function callTool(spec, args) {
     if (error instanceof Refused) {
       return toolResult({ summary: "Refused" }, false, error.message);
     }
-    log(`Handler crashed:\n${error?.stack ?? error}`);
+    // A crash is text nobody wrote for a reader, so it is scrubbed like any other: the token
+    // must not reach the log or the client whatever put it into an error message.
+    const secret = process.env[TOKEN_ENV]?.trim() ?? "";
+    log(redact(`Handler crashed:\n${error?.stack ?? error}`, secret));
     return toolResult(
       { summary: "Internal Error" },
       false,
-      `${error?.name ?? "Error"}: ${error?.message ?? error}`,
+      redact(`${error?.name ?? "Error"}: ${error?.message ?? error}`, secret),
     );
   }
 }
