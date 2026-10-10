@@ -5,7 +5,7 @@ description: Building this GitHub MCP server — moving create_github_repo out o
 
 # Forge servers — GitHub
 
-## 2026-10-10 — in progress
+## 2026-10-10 — complete
 
 **Goal.** An LLM can work with GitHub — repositories, branches, files, commits, tags,
 releases, issues, pull requests and Actions — through a dedicated MCP server, and the
@@ -14,8 +14,8 @@ host-shell server (`cli`) no longer carries any forge code.
 **Objective.** `node src/index.js` serves 45 tools over stdio, named as the owner listed them.
 `repo_create` is the `create_github_repo` tool moved out of `cli` 2.1.0, renamed, with the same
 arguments and behaviour. The token is read from `LXAGENTS_MCP_GITHUB_API_KEY` at call time and
-never appears in an argument, a log line or an error. `npm test` is green and no test touches
-the network. The repository has the structure of `shared-instruction`, without `content/`.
+never appears in an argument, a log line or an error. `npm test` is green and no test reaches a
+host beyond this machine. The repository has the structure of `shared-instruction`, without `content/`.
 
 **Detail.** One request spans three repositories — `LXAgents-MCP/github`, `LXAgents-MCP/gitlab`
 and `LXAgents-MCP/cli` — built in that order, each with its own record under this slug. `cli`
@@ -25,7 +25,7 @@ it. Stdio only, Node 20 or newer, no build step; the runtime dependencies are th
 zod. GitHub means github.com. The moved code comes from `cli` commits `827b25a`, `c7d5bae` and
 `5f9b64f`; its history is not transplanted.
 
-**Status:** in progress.
+**Status:** complete. Released as `0.1.0`; the pull requests, merged in order by rebase, are in the table.
 
 ## Tasks
 
@@ -406,3 +406,30 @@ The docs that state the process contract, the repository map, the security proce
 deployment rule now cover the image, and the state file no longer says there is none.
 
 Tests: 279 passing, none failing.
+
+### Task 14 — release/0.1.0
+
+Landed. The version is `0.1.0` in `package.json` and the lockfile — the owner approved it with the plan
+(D3) — and no git tag was made and nothing was published.
+
+The release log is `wiki/logs/0/1/0/CHANGELOG.md`, in the house shape: a lead, the **Clients must**
+steps, then Added, Changed and Security. It says first that nothing has run against live GitHub. Its
+index, `.agents/index/logs-index.md`, is new and routed from the root index; the state file is
+rewritten to describe a released repository.
+
+The live-check list is not in the release log but in `wiki/guides/smoke-test.md`: a walk through every
+tool on a throwaway repository, then each behaviour the documentation leaves open with what to look for.
+A released log may not be edited, and the owner will work through this list and learn which items hold;
+a page can follow what they find, and the next release's log carries the corrections.
+
+Checks run on the release branch from a clean install (`rm -rf node_modules && npm ci`): 279 tests pass
+and none fail; the production tree is the MCP SDK and zod; nothing under `src/` imports `node:http`,
+`node:net`, `node:cluster` or `express`; the `Dockerfile` has no `ENV`, `EXPOSE` or `ENTRYPOINT` line;
+`node src/index.js --version` prints `lxagents-github 0.1.0`.
+
+Because the redirect test uses the real `fetch` against two servers on loopback, the sentences that said
+the tests touch no network now say they reach no host beyond this machine: the repository rules, the
+README, the setup page and this record's objective.
+
+Left for the owner: the smoke test, building the image once, and whether and where to publish either.
+The `PR` column of the table above is filled by a closing commit once the pull requests exist.

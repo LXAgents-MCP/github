@@ -14,7 +14,7 @@ npm test
 `npm install` first, once per checkout: a fresh clone has no `node_modules`, and the suite then
 fails with `ERR_MODULE_NOT_FOUND`, which reads as broken code rather than an uninstalled tree.
 
-The suite replaces `fetch` and never touches the network. It drives a real MCP client against the
+The suite replaces `fetch` and reaches no host beyond loopback. It drives a real MCP client against the
 server on an in-memory transport, spawns the real process to check what only a pipe shows (a stray
 write to stdout, a process that outlives its client), and tests each tool for the exact request it
 sends, the payload it returns, and the refusals it makes. `node --test` also executes the two

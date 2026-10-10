@@ -117,7 +117,8 @@ either way.
 Nothing in this repository has been run against live GitHub. Every request shape is checked against
 GitHub's documentation and against mocks, and the environment the work was done in could not reach
 `api.github.com` with a token. What a given token is actually allowed to do is only visible in a real
-call, so a first smoke test against a throwaway repository is the owner's.
+call, so a first smoke test against a throwaway repository is the owner's; the walk is in
+[Smoke test](../guides/smoke-test.md).
 
 ## Reporting something
 
