@@ -161,3 +161,25 @@ not exist yet. The overview states scope, not inventory.
 
 A link check over `README.md`, `wiki/`, `AGENTS.md` and `.agents/` finds no unresolved link. The
 human pages say nothing about `.agents/`. Tests unchanged: 93 passing, none failing.
+
+### Task 5 — feat/repo-tools
+
+Landed. `repo_read`, `repo_update`, `repo_delete`, `repo_fork` and `repo_search`, pinned in
+`test/surface.js` and documented in the surface page and the token table.
+
+Checked against GitHub's REST documentation before writing: the update body parameters
+(`archived: false` unarchives), delete's 204 and `delete_repo` scope, fork's three parameters and
+its 202 with an asynchronous copy, and search's parameters, its 1000-result ceiling and its 30
+requests a minute. `order` is ignored without `sort`, so the tool does not send it. GitHub's fork
+page names no fine-grained permission, and the token table says so instead of guessing one.
+
+Shape. `src/shapes.js` holds the repository schema and mapper that read, update and fork share, and
+`expectBody`, which turns a 2xx answer of the wrong shape into a refusal. `maybeFlag` in
+`src/args.js` keeps not-given apart from false, so an update sends only what changed. `REPO_NAME` is
+exported from `src/api.js` and `repo_create` now shares it.
+
+The guard. `repo_delete` refuses unless `confirm` repeats the full name, ignoring case, and a test
+shows nothing is sent otherwise. The README and the security model carry that claim now that the
+tool exists; task 4 left it out until then.
+
+Tests: 112 passing, none failing.

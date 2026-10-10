@@ -68,6 +68,11 @@ appears in one.
 | Tool | Kind | Does |
 |---|---|---|
 | `repo_create` | write | Create a repository, in the token owner's account or an organization. Private unless told otherwise, with an initial README. Moved from `cli`, where it was `create_github_repo`. |
+| `repo_read` | read | Read one repository: description, visibility, default branch, star, fork and issue counts, language, license, topics and parent. |
+| `repo_update` | update | Change settings: rename, description, homepage, private or public, default branch, archive or unarchive, the issues switch. Only what is passed changes; at least one is required. |
+| `repo_delete` | destroy | Permanently delete a repository. `confirm` must repeat its full name, and anything else deletes nothing. |
+| `repo_fork` | write | Fork into the token owner's account or an organization. GitHub copies it in the background, so the fork may take a moment to be readable. |
+| `repo_search` | read | Search repositories with GitHub's search syntax. Paged; GitHub serves the first 1000 matches and limits search to 30 requests a minute. |
 
 ## What this server does not expose
 

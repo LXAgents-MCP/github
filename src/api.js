@@ -62,7 +62,7 @@ export function redact(text, secret) {
 // GitHub's own rules: a login is letters, digits and '-' (managed accounts add '_'), up to 39
 // characters; a repository name is letters, digits, '-', '_' and '.', up to 100.
 const OWNER = /^[A-Za-z0-9][A-Za-z0-9_-]{0,38}$/;
-const REPO_NAME = /^[A-Za-z0-9._-]{1,100}$/;
+export const REPO_NAME = /^[A-Za-z0-9._-]{1,100}$/;
 
 /**
  * Read a repository argument, `owner/name`.
