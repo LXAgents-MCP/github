@@ -11,6 +11,36 @@ export function firstLine(message) {
 }
 
 /**
+ * Decode bytes as text: UTF-8 when they are valid UTF-8, Windows-1252 when they are not.
+ *
+ * The byte order mark is kept (`ignoreBOM`), so a caller that cares can strip it explicitly. With
+ * `max`, only the first `max` bytes are decoded, and a character the cut split is dropped
+ * instead of shown as a replacement mark.
+ *
+ * @param {Uint8Array} bytes
+ * @param {{ max?: number }} [options]
+ * @returns {{ text: string, truncated: boolean }}
+ */
+export function decodeText(bytes, { max } = {}) {
+  let encoding = "utf-8";
+  try {
+    new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    encoding = "windows-1252";
+  }
+
+  const truncated = max !== undefined && bytes.length > max;
+  let text = new TextDecoder(encoding, { ignoreBOM: true }).decode(truncated ? bytes.subarray(0, max) : bytes);
+  if (truncated && encoding === "utf-8") text = text.replace(/\uFFFD$/, "");
+  return { text, truncated };
+}
+
+/** Does this look like binary data? A NUL byte early on is the usual tell. */
+export function looksBinary(bytes) {
+  return bytes.subarray(0, 8000).includes(0);
+}
+
+/**
  * Cut text to a length, keeping the start.
  *
  * @param {string} text

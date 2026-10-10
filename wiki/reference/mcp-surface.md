@@ -84,6 +84,20 @@ appears in one.
 | `branch_delete` | destroy | Delete a branch. The default branch cannot be deleted. |
 | `branch_merge` | destroy | Merge a branch or commit into another branch directly, with no pull request. Moves the base branch. |
 
+### Files and directories
+
+Changes are made by committing through the API, one commit per call, on a branch you name (default:
+the default branch). `file_update` and `file_delete` read the file's current sha first unless you pass
+one, so a change fails if the file moved on in between.
+
+| Tool | Kind | Does |
+|---|---|---|
+| `file_read` | read | Read one text file at a branch, tag or commit. Cut at 200 KB; binary files and files over 1 MB are refused. Returns its content, size and blob sha. |
+| `directory_list` | read | List the files and folders in one directory, not recursively. Omit the path for the root. |
+| `file_create` | write | Create a new file as one commit. Fails if it exists. Content up to 1 MB. |
+| `file_update` | update | Replace an existing file's whole content as one commit. Fails if it changed since the sha. |
+| `file_delete` | destroy | Delete one file as one commit. The file stays in history. |
+
 ## What this server does not expose
 
 | Not exposed | Why |

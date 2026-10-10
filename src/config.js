@@ -27,3 +27,12 @@ export const MAX_OUTPUT = 30_000;
 /** Results per page when a call does not say, and the most GitHub allows. */
 export const DEFAULT_PER_PAGE = 30;
 export const MAX_PER_PAGE = 100;
+
+/** Bytes of a file shown to the model. A file is read to be looked at, not ingested. */
+export const MAX_FILE_BYTES = 200_000;
+
+/** Bytes of content one write may carry. Source files fit; blobs are not what this is for. */
+export const MAX_WRITE_BYTES = 1_000_000;
+
+/** Entries shown for a directory. GitHub itself stops at 1000. */
+export const MAX_LIST_ENTRIES = 500;
