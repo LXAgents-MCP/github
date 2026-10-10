@@ -76,19 +76,22 @@ jobs:
 
 ## Over HTTP
 
-Run this once if you will use the HTTP transport. It needs only the server and a token; the walk above
-then works unchanged through a client registered as in
-[Set up HTTP with a token](setup-http-token.md).
+Run this once if you will use the HTTP transport. It needs only the server, a GitHub key and an access token;
+the walk above then works unchanged through a client registered as in
+[Set up HTTP with two tokens](setup-http-token.md). Start the server with both variables set:
+`GITHUB_API_KEY=<key> MCP_AUTH_TOKEN=$(openssl rand -hex 32) npm run start:http`, and keep the access token.
 
 | # | Do | Expect |
 |---|---|---|
-| H1 | `npm run start:http`, then `curl http://127.0.0.1:3001/healthz` | `{"status":"ok","server":"lxagents-github","version":"…"}` with no token. |
-| H2 | `curl -i -X POST http://127.0.0.1:3001/mcp` | 401 with `WWW-Authenticate: Bearer realm="mcp"`. |
-| H3 | `tools/list` with `Authorization: Bearer $GITHUB_TOKEN` (the curl in the guide) | The 45 tools. |
-| H4 | `tools/call` `repo_read` on a repository your token can read, with that header | The repository, read as the token's owner. |
-| H5 | The same call with a valid but unrelated GitHub token for another account | A 404 for a private repository the second account cannot see — each request acts as its own token. |
-| H6 | The same call with a revoked or mistyped token | A message that GitHub rejected the token (401) and names the `Authorization: Bearer` header; the token is not in it. |
-| H7 | Start the server with `MCP_AUTH_TOKEN` set and repeat H2 | A line on stderr saying it is ignored, and still a 401: the environment is never a fallback. |
+| H1 | Start the server with `MCP_AUTH_TOKEN` unset, then with `MCP_AUTH_TOKEN=short` | It exits 1 both times, saying `will not start the HTTP transport` and naming the variable, and listens on nothing. |
+| H2 | Start it properly, then `curl http://127.0.0.1:3001/healthz` | `{"status":"ok","server":"lxagents-github","version":"…"}` with no token. |
+| H3 | `curl -i -X POST http://127.0.0.1:3001/mcp` | 401 with `WWW-Authenticate: Bearer realm="mcp"`. |
+| H4 | The same with `Authorization: Bearer wrong` | 401 with `error="invalid_token"`. |
+| H5 | The same with the GitHub key as the bearer | 401 as well: the key is not an access token. |
+| H6 | `tools/list` with `Authorization: Bearer $MCP_AUTH_TOKEN` (the curl in the guide) | The 45 tools. |
+| H7 | `tools/call` `repo_read` on a repository the key can read, with that header | The repository, read as the key's owner. |
+| H8 | Restart the server with a revoked or mistyped `GITHUB_API_KEY` and repeat H7 | A message that GitHub rejected the token (401) naming `GITHUB_API_KEY`; neither secret is in it. |
+| H9 | Restart the server without `GITHUB_API_KEY` and repeat H7 | The server said so on stderr at start; the tool is refused naming `GITHUB_API_KEY`. |
 
 ## What the documentation leaves open
 
@@ -115,8 +118,8 @@ differently, the tool named is the one to fix.
 | `workflow_run` | With `return_run_details: true` the pinned API version answers 200 with the run id, or 204 with none — either is handled. An input the workflow does not declare, or a workflow without a dispatch trigger, is a 422; a workflow file not on the default branch is a 404. |
 | `workflow_status` | `per_page=1` on a workflow's runs returns the newest run; a branch name with a slash works in the `branch` filter. |
 | `workflow_logs` | GitHub's 302 to a signed address is followed and the token is not sent there. A job still running gives its partial log or none; an expired log is noted; a log over 20 MB is refused with the general size message. |
-| HTTP, any tool | The token in the `Authorization` header reaches `api.github.com` as the bearer credential of that request, and two interleaved requests with different tokens act as their own users. |
-| the image | Build it, run `node src/index.js --version` in it, connect a client with `docker run --rm -i -e MCP_AUTH_TOKEN`, and check that `docker stop` returns at once. See [Docker](../environments/docker.md). |
+| HTTP, any tool | `GITHUB_API_KEY` reaches `api.github.com` as the bearer credential of every call, and the client's access token appears in none of them. |
+| the image | Build it, run `node src/index.js --version` in it, connect a client with `docker run --rm -i -e GITHUB_API_KEY`, and check that `docker stop` returns at once. See [Docker](../environments/docker.md). |
 
 ## Reporting what differs
 
@@ -128,6 +131,6 @@ in this one.
 ## Related pages
 
 * [Connect a client](connect-a-client.md)
-* [Set up HTTP with a token](setup-http-token.md)
+* [Set up HTTP with two tokens](setup-http-token.md)
 * [Environment](../environments/env.md) — what each tool needs from the token.
 * [Security model](../security/security-model.md) — why nothing has been run live.
