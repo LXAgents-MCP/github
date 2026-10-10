@@ -128,3 +128,53 @@ export function describeRelease(fields) {
   const kind = fields.draft ? "draft release" : fields.prerelease ? "prerelease" : "release";
   return `${kind} ${fields.name ?? fields.tag} (tag ${fields.tag})`;
 }
+
+/** The names in a list GitHub returns as strings or as objects with a `name` or a `login`. */
+export function namesOf(list) {
+  return (Array.isArray(list) ? list : [])
+    .map((entry) => (typeof entry === "string" ? entry : (entry?.name ?? entry?.login)))
+    .filter(Boolean);
+}
+
+/** What `issue_read` reports about an issue - and, because a pull request is an issue, about that. */
+export const issueShape = {
+  number: z.number(),
+  title: z.string(),
+  state: z.string(),
+  state_reason: z.string().optional(),
+  author: z.string().optional(),
+  labels: z.array(z.string()),
+  assignees: z.array(z.string()),
+  milestone: z.string().optional(),
+  comment_count: z.number(),
+  is_pull_request: z.boolean(),
+  html_url: z.string(),
+  created_at: z.string().optional(),
+  updated_at: z.string().optional(),
+  closed_at: z.string().optional(),
+  body: z.string().optional(),
+};
+
+/**
+ * @param {any} issue An issue as GitHub returns it.
+ * @returns {Omit<z.infer<z.ZodObject<typeof issueShape>>, never>}
+ */
+export function issueFields(issue) {
+  return {
+    number: issue.number,
+    title: issue.title,
+    state: issue.state,
+    ...(issue.state_reason ? { state_reason: issue.state_reason } : {}),
+    ...(issue.user?.login ? { author: issue.user.login } : {}),
+    labels: namesOf(issue.labels),
+    assignees: namesOf(issue.assignees),
+    ...(issue.milestone?.title ? { milestone: issue.milestone.title } : {}),
+    comment_count: issue.comments ?? 0,
+    is_pull_request: Boolean(issue.pull_request),
+    html_url: issue.html_url,
+    ...(issue.created_at ? { created_at: issue.created_at } : {}),
+    ...(issue.updated_at ? { updated_at: issue.updated_at } : {}),
+    ...(issue.closed_at ? { closed_at: issue.closed_at } : {}),
+    ...(issue.body ? { body: issue.body } : {}),
+  };
+}

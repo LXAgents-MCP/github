@@ -276,3 +276,27 @@ handler as an answer, which is what `allow` in `github()` is for.
 `release_create` is how a tag is made, since the tool list has no `tag_create`; its description says so.
 
 Tests: 196 passing, none failing.
+
+### Task 10 — feat/issue-tools
+
+Landed. `issue_open`, `issue_read`, `issue_comment`, `issue_close`, `issue_assign`, `issue_label` and
+`issue_lock`, pinned in `test/surface.js` and documented in the surface page and the token table.
+
+Checked against GitHub's REST documentation: creating an issue needs only a title, and **silently drops**
+assignees, labels and a milestone for a token without push access; getting one carries a `pull_request`
+key when the number is a pull request, and a `comments` count; an update takes `state` and
+`state_reason`, and its `assignees` and `labels` replace the whole set; adding assignees answers 201 and
+removing them 200 with a body on a DELETE; labels add (POST), replace (PUT) or remove one by name
+(DELETE, 404 if the label does not exist); locking takes one of four reasons and answers 204, and a PUT
+with no body is sent with a zero length. Because of the silent drops, `issue_open`, `issue_assign` and
+`issue_label` return what GitHub applied and list what it did not (`not_applied`), instead of reporting
+success for a request GitHub quietly shrank.
+
+The renderer changed again: a long or multi-line field of a row in a list (a comment's body) is an
+indented block under its bullet, so `issue_read` shows each comment in full instead of clipped to a
+line. Short rows are unchanged.
+
+`issue_close` posts its optional comment first, and if closing then fails it says the comment was
+already posted. There is no reopen tool, as the owner's list has none.
+
+Tests: 222 passing, none failing.
