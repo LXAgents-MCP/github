@@ -21,9 +21,10 @@ tags and releases, issues, pull requests and Actions workflows. A tool count is 
 here: it goes stale at the next module. `repo_create` was moved here from the `cli` server, where it
 was `create_github_repo`.
 
-**Token.** The GitHub token: `MCP_AUTH_TOKEN` over stdio, read when a tool is called, or the bearer token
-of each request over HTTP, which never reads it. `MCP_TRANSPORT`, `PORT` and `HOST` are the only other variables, and
-the only flags are `--help` and `--version`.
+**Tokens.** Two. `GITHUB_API_KEY` is the GitHub token, read when a tool is called, on both transports.
+`MCP_AUTH_TOKEN` is the access token HTTP requires of a client (32 characters or more; HTTP exits 1 without it) and
+is never read over stdio or sent to GitHub. `MCP_TRANSPORT`, `PORT` and `HOST` are the only other variables, and the
+only flags are `--help` and `--version`.
 
 **Verified.** The suite (299 tests) replaces `fetch` and reaches no host beyond loopback. Every request shape is
 checked against GitHub's documentation and against mocks. The production-only dependency tree the image

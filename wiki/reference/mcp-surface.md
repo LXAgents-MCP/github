@@ -11,9 +11,9 @@ resources, and two transports: stdio and HTTP. See [What this server does not ex
 |---|---|
 | `name` | `lxagents-github` |
 | `version` | from `package.json`, read at import by `src/version.js` |
-| transport | stdio by default (`src/index.js`); HTTP with `MCP_TRANSPORT=http` (`src/http.js`), where every route but `GET /healthz` needs `Authorization: Bearer <GitHub token>` |
+| transport | stdio by default (`src/index.js`); HTTP with `MCP_TRANSPORT=http` (`src/http.js`), where every route but `GET /healthz` needs `Authorization: Bearer <MCP_AUTH_TOKEN>` |
 
-`initialize` also returns `instructions`: that every tool needs a GitHub token (`MCP_AUTH_TOKEN` over stdio, the bearer header over HTTP), that
+`initialize` also returns `instructions`: that every tool needs `GITHUB_API_KEY` in the server's environment, that
 a repository is named `owner/name`, and that tools which delete or merge are destructive and should
 be confirmed with the owner first.
 
