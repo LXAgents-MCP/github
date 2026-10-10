@@ -11,7 +11,7 @@ description: Current known state of LXAgents-MCP/github — what exists, what is
 log is `wiki/logs/0/1/0/CHANGELOG.md`. No git tag was made, by decision (D3 in
 `tasks/forge-servers.md`).
 
-**What it is.** A stdio MCP server, `lxagents-github`, over the GitHub REST API at `api.github.com`.
+**What it is.** An MCP server, stdio by default and HTTP with a bearer token, `lxagents-github`, over the GitHub REST API at `api.github.com`.
 Plain JavaScript, Node ESM, no build step, two runtime dependencies: the MCP SDK and zod.
 
 **Surface.** One tool per module in `src/tools/`. The full list is pinned in `test/surface.js` and
@@ -20,7 +20,8 @@ tags and releases, issues, pull requests and Actions workflows. A tool count is 
 here: it goes stale at the next module. `repo_create` was moved here from the `cli` server, where it
 was `create_github_repo`.
 
-**Token.** `LXAGENTS_MCP_GITHUB_API_KEY`, read when a tool is called. No other variable is read, and
+**Token.** The GitHub token: `MCP_AUTH_TOKEN` over stdio, read when a tool is called, or the bearer token
+of each request over HTTP, which never reads it. `MCP_TRANSPORT`, `PORT` and `HOST` are the only other variables, and
 the only flags are `--help` and `--version`.
 
 **Verified.** The suite replaces `fetch` and reaches no host beyond loopback. Every request shape is
@@ -32,7 +33,8 @@ in could not reach `api.github.com` with a token. The write tools are the ones t
 `wiki/guides/smoke-test.md` is the walk and the list of behaviours the documentation leaves open. The
 `Dockerfile` has never been built: there was no Docker daemon.
 
-**Not built.** No CI. No HTTP transport (decision `stdio-only-transport.md`). No GitHub Enterprise.
+**Not built.** No CI. No TLS, `Host` allow-list or rate limiting in the HTTP transport (decision
+`http-token-transport.md`). No GitHub Enterprise.
 Not published to npm (`private: true`). No git tag, no published image.
 
 **Next.** The owner's smoke test, and whatever it finds. Anything it changes in a request is a patch

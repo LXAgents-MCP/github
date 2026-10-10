@@ -3,7 +3,7 @@
 Everything `lxagents-github` exposes.
 
 **It exposes tools, and nothing else.** One per module in `src/tools/`. There are no prompts and no
-resources, and one transport: stdio. See [What this server does not expose](#what-this-server-does-not-expose).
+resources, and two transports: stdio and HTTP. See [What this server does not expose](#what-this-server-does-not-expose).
 
 ## Server identity
 
@@ -11,9 +11,9 @@ resources, and one transport: stdio. See [What this server does not expose](#wha
 |---|---|
 | `name` | `lxagents-github` |
 | `version` | from `package.json`, read at import by `src/version.js` |
-| transport | stdio (`src/index.js`) |
+| transport | stdio by default (`src/index.js`); HTTP with `MCP_TRANSPORT=http` (`src/http.js`), where every route but `GET /healthz` needs `Authorization: Bearer <GitHub token>` |
 
-`initialize` also returns `instructions`: that every tool needs `LXAGENTS_MCP_GITHUB_API_KEY`, that
+`initialize` also returns `instructions`: that every tool needs a GitHub token (`MCP_AUTH_TOKEN` over stdio, the bearer header over HTTP), that
 a repository is named `owner/name`, and that tools which delete or merge are destructive and should
 be confirmed with the owner first.
 
@@ -175,7 +175,8 @@ a signed address on another host, and the request follows the redirect without t
 |---|---|
 | Prompts and resources | Everything an agent needs is a call with arguments. |
 | Local files and commands | That is `cli`'s job; this server touches GitHub only. |
-| HTTP | The token can delete repositories. See [Security model](../security/security-model.md). |
+| Sessions, server-sent event streams and `GET /mcp` | The HTTP transport is stateless: one request, one answer, and a `GET` or `DELETE` to `/mcp` is a 405. |
+| TLS, a `Host` allow-list, rate limiting | Not done by this server. Put TLS in front before exposing the port; see [Security model](../security/security-model.md). |
 | GitHub Enterprise | The API base is a constant, and another host would need a second setting. |
 | `clone`, `push` and other git transport | File tools commit through the API instead. |
 | `issue_list`, `pr_list`, `tag_create`, `issue_reopen`, inline review comments, cancelling or re-running a run, enabling or disabling a workflow, artifacts, secrets | Outside the tool list this server was built to. A tag is created by `release_create`. |

@@ -11,7 +11,7 @@ agent-facing orientation and links out rather than restating.
 ## What this repository is
 
 `LXAgents-MCP/github` — an MCP server named `lxagents-github` that gives an LLM access to GitHub
-through the REST API, over stdio. Plain JavaScript, Node ESM, no build step. It is a **consumer**
+through the REST API, over stdio or HTTP. Plain JavaScript, Node ESM, no build step. It is a **consumer**
 of the shared instruction set and the **producer** of the tool surface in `src/tools/`; see
 [`../../rules/repository.md`](../../rules/repository.md).
 
@@ -19,7 +19,9 @@ of the shared instruction set and the **producer** of the tool surface in `src/t
 
 | Path | Contents | Touch it when |
 |---|---|---|
-| `src/index.js` | The one entry point: `--help`, `--version`, the stdio transport, `SIGINT` and `SIGTERM`. | The process contract. |
+| `src/index.js` | The one entry point: `--help`, `--version`, `MCP_TRANSPORT`, the stdio transport, `SIGINT` and `SIGTERM`. | The process contract. |
+| `src/http.js` | The HTTP transport and the only listener: `POST /mcp`, `GET /healthz`, a fresh stateless server per request, `PORT` and `HOST`. Also what `npm run start:http` runs. | Anything about serving over HTTP. |
+| `src/auth.js` | Where the token comes from: the bearer header parser, the shape check, the per-request token, and the rule that an HTTP process never reads the environment. | Anything about the token source. |
 | `src/server.js` | Builds one `McpServer`, registers every tool, shapes results, and carries the `instructions` text every client reads at `initialize`. | The protocol surface. |
 | `src/api.js` | The GitHub client: the token, addressing (`parseRepo`, `refName`, `refPath`, `filePath`, `workflowName`), `callApi`, `github()`, the wording of every failure, paging. | How a call is addressed, made, or fails. |
 | `src/args.js` | Argument checks: text, flags, whole numbers, choices, lists. | A new kind of argument. |
@@ -28,23 +30,24 @@ of the shared instruction set and the **producer** of the tool surface in `src/t
 | `src/text.js` | `short`, `firstLine`, `head`, `tail`, `cutText`, `decodeText`, `looksBinary`, `cleanLog`. | Cutting, decoding or cleaning text. |
 | `src/shapes.js` | GitHub's objects as the tools report them — a repository, a release, an issue, a job — each a schema and the function that fills it, and `expectBody`, which checks an answer is the object expected. | A second tool returns an object another already does. |
 | `src/contents.js`, `src/releases.js` | What several tools share: a file's path, encoding and blob sha; finding a release by its tag, drafts included. | Those two subjects. |
-| `src/config.js` | Every constant: the variable name, API base and version pin, timeout, limits. | Changing a limit. |
+| `src/config.js` | Every constant: the variable name, API base and version pin, timeout, limits, the HTTP defaults. | Changing a limit. |
 | `src/errors.js`, `src/log.js`, `src/version.js` | `Refused`; the stderr logger; `ROOT`, `VERSION` and `SERVER_NAME`. | Rarely. |
 | `src/tools/` | `index.js`, the registry, and one module per tool. | Adding or changing a tool — **a release**. |
-| `Dockerfile`, `.dockerignore` | The stdio image: `node:22-alpine`, `npm ci --ignore-scripts --omit=dev`, `USER node`, `CMD ["node", "src/index.js"]`, and nothing else. It has never been built. | The image changes — and say it is unbuilt if it still is. |
+| `Dockerfile`, `.dockerignore` | The image (stdio by default, HTTP when told to): `node:22-alpine`, `npm ci --ignore-scripts --omit=dev`, `USER node`, `CMD ["node", "src/index.js"]`, and nothing else. It has never been built. | The image changes — and say it is unbuilt if it still is. |
 | `test/` | One file per subject, plus `helpers.js` and `surface.js`, which every other file imports. | Always. Every behavioural change ships with a test. |
 | `.agents/` | This repository's own rules, indexes, agent wiki and memory. | You are changing something true only here. |
 | `wiki/` | Human documentation, and `wiki/logs/` for release history. | A person needs to read it. |
 
-There is no `dist/`, no `src/transport/`, no `content/` and no HTTP code. If a file you are about to
-edit is under one of those paths, it does not exist here.
+There is no `dist/`, no `src/transport/` and no `content/`; HTTP is `src/http.js` and nothing else. If a file you are about to
+edit is under one of the first three, it does not exist here.
 
 ## Entry point
 
-There is **one**: `src/index.js`, what an MCP client spawns. It connects a stdio transport, handles
-`SIGINT` and `SIGTERM`, and writes nothing to stdout. The process exits by itself when its client goes away,
-because stdin closes. Behind it, `src/server.js` calls `createServer()`, which registers whatever
-`src/tools/index.js` discovered.
+There is **one**: `src/index.js`, what an MCP client spawns. It reads `MCP_TRANSPORT`: stdio connects a
+stdio transport and exits by itself when its client goes away, because stdin closes; `http` hands over to
+`src/http.js`. Either handles `SIGINT` and `SIGTERM`, and nothing writes to stdout. Behind it,
+`src/server.js` calls `createServer()`, which registers whatever `src/tools/index.js` discovered. (`npm run
+start:http` runs `src/http.js` directly.)
 
 ## Commands
 
@@ -52,7 +55,8 @@ because stdin closes. Behind it, `src/server.js` calls `createServer()`, which r
 npm install
 npm test
 npm start                                   # stdio; the token comes from the environment
-LXAGENTS_MCP_GITHUB_API_KEY=<token> npm run inspect   # the MCP Inspector, to drive it by hand
+npm run start:http                          # HTTP on 127.0.0.1:3001; each request brings its token
+MCP_AUTH_TOKEN=<token> npm run inspect      # the MCP Inspector, to drive it by hand
 ```
 
 ## Gotchas that actually bite
@@ -60,7 +64,7 @@ LXAGENTS_MCP_GITHUB_API_KEY=<token> npm run inspect   # the MCP Inspector, to dr
 * **Nothing writes to stdout.** stdout is the JSON-RPC channel. A stray write corrupts the stream
   and the client reports a JSON parse error that points at the payload, not at the logging.
 * **Starting without a token is fine.** The token is read when a tool runs; without it the tool
-  refuses and names `LXAGENTS_MCP_GITHUB_API_KEY`. That is not a broken server.
+  refuses and names `MCP_AUTH_TOKEN`. That is not a broken server.
 * **A server registered mid-session is absent until the session restarts.** The client loads its
   connectors at start.
 * **The tool list is pinned.** Add a tool without its line in `test/surface.js` and three tests

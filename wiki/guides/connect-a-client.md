@@ -27,7 +27,7 @@ Clone the repository, run `npm install` once, then add the server to the client.
     "lxagents-github": {
       "command": "node",
       "args": ["/absolute/path/to/github/src/index.js"],
-      "env": { "LXAGENTS_MCP_GITHUB_API_KEY": "<your GitHub token>" }
+      "env": { "MCP_AUTH_TOKEN": "<your GitHub token>" }
     }
   }
 }
@@ -37,7 +37,7 @@ Clone the repository, run `npm install` once, then add the server to the client.
 
 ```bash
 claude mcp add lxagents-github \
-  --env LXAGENTS_MCP_GITHUB_API_KEY=<your GitHub token> \
+  --env MCP_AUTH_TOKEN=<your GitHub token> \
   -- node /absolute/path/to/github/src/index.js
 ```
 
@@ -49,7 +49,7 @@ Or commit a project `.mcp.json` that reads the token from the environment instea
     "lxagents-github": {
       "command": "node",
       "args": ["/absolute/path/to/github/src/index.js"],
-      "env": { "LXAGENTS_MCP_GITHUB_API_KEY": "${LXAGENTS_MCP_GITHUB_API_KEY}" }
+      "env": { "MCP_AUTH_TOKEN": "${GITHUB_TOKEN}" }
     }
   }
 }
@@ -57,6 +57,9 @@ Or commit a project `.mcp.json` that reads the token from the environment instea
 
 **In a container** instead of on the host: the same entry with `docker` as the command. See
 [Docker](../environments/docker.md).
+
+**Over HTTP** instead of stdio, with the token in a header and one server shared by several clients: see
+[Set up HTTP with a token](setup-http-token.md).
 
 ## 3. Restart the client
 
@@ -76,7 +79,7 @@ throwaway name:
 
 > Create a private GitHub repository called `scratch-delete-me` in my account.
 
-A rejected token comes back as a message naming `LXAGENTS_MCP_GITHUB_API_KEY`; a token that lacks a
+A rejected token comes back as a message naming `MCP_AUTH_TOKEN`; a token that lacks a
 permission comes back as a 403 that says so.
 
 ## Related pages
@@ -84,3 +87,4 @@ permission comes back as a 403 that says so.
 * [Environment](../environments/env.md)
 * [Local setup](../environments/setup.md)
 * [Docker](../environments/docker.md)
+* [Set up HTTP with a token](setup-http-token.md)

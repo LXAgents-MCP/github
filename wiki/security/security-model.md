@@ -5,13 +5,15 @@ describes nothing about any other: each repository keeps its own model, and they
 not merged. In particular, the shared instruction repository holds no credential and serves public
 text, so nothing it says about "nothing to protect" applies here.
 
-**The one line worth keeping:** this server holds a GitHub token that can change and delete
-repositories, and the token reaches exactly one header, built in exactly one place.
+**The one line worth keeping:** this server uses a GitHub token that can change and delete
+repositories, and the token reaches exactly one header, built in exactly one place. Over HTTP it does not
+even hold the token: each request brings its own, and it is dropped when the request ends.
 
 ## What this project actually is, in security terms
 
 A credentialed API client with no state. It reads no local file but its own `package.json`, runs no
-command, persists nothing and listens on nothing. Its input is tool arguments from a client; its
+command and persists nothing. Over stdio it listens on nothing; over HTTP it listens on one port, on
+loopback unless told otherwise. Its input is tool arguments from a client; its
 output is HTTPS requests to `api.github.com` — and, to read a job's log, to the signed address GitHub
 redirects that request to — and results back to the same client. The interesting
 risk is not data theft from the server — there is no data in it — but **authority**: whatever the
@@ -39,10 +41,11 @@ that do not depend on the model behaving:
 
 | File | Exposure | Guard |
 |---|---|---|
-| `src/api.js` `requireToken` | Anyone who can set the process environment | Read per call; never an argument; the registry test fails any tool whose input names a credential |
+| `src/auth.js` `currentToken`, `src/api.js` `requireToken` | Over stdio, anyone who can set the process environment; over HTTP, anyone who can send a request | Read per call; never an argument; the registry test fails any tool whose input names a credential; a process that serves HTTP never reads the environment, so a request with no token is refused and not run with the owner's |
+| `src/http.js` | The one listener, reachable by anyone who can open the port | Every route but `GET /healthz` needs `Authorization: Bearer <token>`, checked for shape before the body is parsed or a path matched; the token lives in an `AsyncLocalStorage` for one request and is stored nowhere; 4 MB body cap; binds `127.0.0.1` unless `HOST` says otherwise; a test shows overlapping requests each reach GitHub with their own token |
 | `src/api.js` `github()` | The only place the `Authorization` header is built | One call site; the header goes to `callApi` and nowhere else |
 | `src/api.js` `failure()` and `callApi` | Error text built from GitHub's answer or from the network | `redact` on every message; tests make GitHub echo the token and make the network error carry it |
-| `src/server.js` `callTool` | The unexpected-exception path | `redact` on the log line and on the returned text; a test makes a handler throw the token |
+| `src/server.js` `callTool` | The unexpected-exception path | `redact` on the log line and on the returned text, with whichever token is active; a test makes a handler throw the token |
 | `src/log.js` | stderr | The logger writes what it is given, and nothing logs a request or a header |
 
 ### Which endpoint a call reaches
@@ -63,10 +66,16 @@ that do not depend on the model behaving:
 
 ## Secrets
 
-There is one: **`LXAGENTS_MCP_GITHUB_API_KEY`**. It lives in the environment of the server process,
-set by the `env` block of the client's configuration, and nowhere else: not in the repository, a
-wiki page, a test fixture, a Dockerfile `ENV` line, or a commit. The tests use an obvious dummy and
-no real value exists in this repository.
+There is one: the GitHub token. Over stdio it is **`MCP_AUTH_TOKEN`**, in the environment of the server
+process, set by the `env` block of the client's configuration. Over HTTP it is the bearer token of each
+request, in the client's `headers`, and the server keeps it only for that request. It lives nowhere
+else: not in the repository, a wiki page, a test fixture, a Dockerfile `ENV` line, or a commit. The
+tests use an obvious dummy and no real value exists in this repository.
+
+**The name is shared with `shared-instruction`**, which uses `MCP_AUTH_TOKEN` for its own, different
+access token. The two are separate processes, so the name does not clash as long as each gets its own
+value in its own `env` block. A value exported in a shell would be inherited by a stdio process of the
+other server and sent to GitHub, which is why the setup guide says never to export it.
 
 ## What to grant
 
@@ -77,17 +86,28 @@ delete repositories cannot be talked into deleting one.
 
 ## Deployment posture
 
-Stdio only: the client spawns the process on its own machine, and the only caller is whoever already
-runs it. There is no authentication on stdio and no reason for any. There is deliberately **no HTTP
-transport**, because over a network the same token would be usable by anyone holding the server's
-bearer token, with no identity per caller and no way to revoke one. Adding one is a separate
-decision with its own security record.
+Two transports. **stdio** is the default: the client spawns the process on its own machine, and the
+only caller is whoever already runs it, so there is no authentication on it and no reason for any.
+**HTTP** is opt-in with `MCP_TRANSPORT=http`, and it is reachable by anyone who can open its port, so
+every request but `GET /healthz` must carry `Authorization: Bearer <GitHub token>`.
+
+The objection that once kept HTTP out was a server-held secret that anyone holding the server's token
+could use, with no identity per caller and no way to revoke one. Passing the GitHub token through
+removes it: the server holds no GitHub token, a caller acts as the owner of the token it sends and
+only with that token's permissions, GitHub's audit log names that token, and revoking it ends that
+caller alone. The decision is in `.agents/memory/decisions/http-token-transport.md`.
+
+**What it does not do, and the operator must.** It does not terminate TLS. The token travels in a
+header, and over plain `http` anyone on the path can read it, so the default bind is `127.0.0.1` and
+anything that exposes the port must put TLS in front. It has no `Host` allow-list and no rate limit of
+its own; GitHub limits each token, and a body is capped at 4 MB. Its health route says who is there and
+nothing else.
 
 A container changes where the process runs and not what it can do. The image
 ([Docker](../environments/docker.md)) runs as a non-root user, declares no port, and holds no token in
-any layer: the token is passed at run time with `-e`, which puts it in the container's environment,
-where anyone who can `docker inspect` the container sees it. The same token reaches the same API
-either way.
+any layer: over stdio the token is passed at run time with `-e`, which puts it in the container's
+environment, where anyone who can `docker inspect` the container sees it; over HTTP no token is passed
+to the container at all. The same token reaches the same API either way.
 
 ## Verifying
 
@@ -98,15 +118,18 @@ either way.
 | A path cannot leave its endpoint | `npm test` — the api tests for the five address helpers | pass |
 | The token is not sent to a redirect target | `npm test` — the `callApi` redirect test | passes |
 | stdout stays silent | `npm test` — the stdio tests for `--help`, `--version` and a bad flag | stdout empty |
-| No listener or HTTP library | ``grep -rn -e "node:http" -e "node:net" -e "node:cluster" -e express src`` | no output |
+| A request needs a token, and uses its own | `npm test` — `test/http.test.js`: the 401 cases, overlapping tokens, no upstream call without a token | pass |
+| Only one file listens | ``grep -rln -e "node:http" -e "node:net" -e "node:cluster" -e express src`` | `src/http.js` and nothing else |
 | Only two runtime dependencies | `npm ls --omit=dev --depth=0` | the MCP SDK and zod |
-| The image bakes in no secret and opens no port | ``grep -n -e '^ENV' -e '^EXPOSE' -e '^ENTRYPOINT' Dockerfile`` | no output |
+| The image bakes in no secret | ``grep -n -e '^ENV' -e '^EXPOSE' -e '^ENTRYPOINT' Dockerfile`` | no output |
 
 ## Not a finding here
 
 * **stdio has no authentication.** Deliberate, as above.
-* **The token sitting in the client's `env` block.** That is the designed route; the alternative, an
-  argument, would put it in a prompt and a transcript.
+* **The token sitting in the client's `env` block or `headers`.** That is the designed route; the
+  alternative, an argument, would put it in a prompt and a transcript.
+* **`GET /healthz` answering without a token.** It is the one open route and says only that a server
+  is there.
 * **A registered server that reports healthy but has no tools.** The client loads connectors at
   session start, so a server added mid-session is absent until the session restarts.
 * **A 404 for a repository that exists.** GitHub answers 404 for a private repository the token
@@ -129,7 +152,7 @@ Open an issue on `LXAgents-MCP/github`. If the finding involves a token that may
 
 The whole security posture is one credential handled in one place: it never leaves `src/api.js`
 except as an `Authorization` header to `api.github.com`, it is scrubbed from every message the
-server can produce, no argument can carry it or redirect a call, and there is no listener for anyone
-else to use it through. What remains is authority — the token can do what it was granted — which is
+server can produce, no argument can carry it or redirect a call, and the one listener refuses every
+request that does not bring a token of its own. What remains is authority — the token can do what it was granted — which is
 why the destructive tools are annotated, why `repo_delete` asks for the repository's name, and why
 the first advice is to grant less.
