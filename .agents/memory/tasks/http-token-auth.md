@@ -59,3 +59,39 @@ Landed: this record and its row in `memory-index.md`. Nothing outside `.agents/`
 The `PR` column is filled by a closing commit, not here, so no later branch needs a rebase.
 
 Baseline before any change: `npm test` ran 279 passing and none failing.
+
+### Task 2 — feat/http-token-auth
+
+Landed. `MCP_TRANSPORT=http node src/index.js`, or `npm run start:http`, serves `POST /mcp` and `GET /healthz`
+on `127.0.0.1:3001`, with `PORT` and `HOST` to change them. Every route but `/healthz` needs
+`Authorization: Bearer <GitHub token>`: a missing or malformed header is a 401 in the JSON-RPC envelope with
+`WWW-Authenticate: Bearer realm="mcp"`, and a credential longer than 512 characters or not printable ASCII adds
+`error="invalid_token"`. The check comes before the body is parsed and before a path is matched, so a caller
+without a token cannot make the server read 4 MB or find out which routes exist; with a token, an unknown path is
+404, a method other than POST is 405 with `Allow: POST`, a body that is not JSON is 400 and one over 4 MB is 413.
+Each request gets its own `McpServer` and a stateless streamable-HTTP transport, closed with its response.
+
+The variable is renamed: `LXAGENTS_MCP_GITHUB_API_KEY` is gone from `src/`, the tests and the tool descriptions,
+and `MCP_AUTH_TOKEN` replaces it (D2, D10). The token source is one place, `src/auth.js`: the request's bearer
+token reaches `requireToken` through an `AsyncLocalStorage`, and a process that serves HTTP is marked by
+`enterHttpMode`, after which the environment is never consulted (D3). That mark is the guard, not the request
+context: if the context were ever lost, a tool would be refused, not run with the environment's token. The 401
+wording from GitHub and the crash scrubbing follow the active source, so over HTTP they name the header and
+scrub the request's token. A process that serves HTTP with `MCP_AUTH_TOKEN` also set says on stderr that it is
+ignored, without the value. A bad `MCP_TRANSPORT` or `PORT` exits 2.
+
+`node:http` appears only in `src/http.js`; the dependencies are still the MCP SDK and zod (D7). The decision is
+recorded in `.agents/memory/decisions/http-token-transport.md`, which answers the objections of the stdio-only
+record one by one, and that record is marked superseded and kept.
+
+Tests: 299 passing, none failing; 20 are new. `test/auth.test.js` covers the header parser, the shape check, the
+sources and their precedence, 12 overlapping requests each keeping their token, and HTTP mode ignoring the
+environment. `test/http.test.js` runs over real loopback sockets with `node:http` as the client, because `fetch` is
+what stands in for GitHub: the 401 cases, the exact `/healthz` exemption, 404/405/400/413, 45 tools listed, the
+request's token reaching GitHub with the environment's set, no upstream call without a token, 8 concurrent tokens
+not mixing, GitHub's rejection naming the header with the token absent from the response and the log, and a real
+process that ignores a leftover `MCP_AUTH_TOKEN`, answers, and stops on SIGTERM with nothing on stdout. Replacing
+the request-scoped token with none makes three of them fail, which was confirmed.
+
+Left for task 3: the setup guide and every page that still says stdio only. The rules `repository.md` and the
+security procedure still forbid a listener until task 3 corrects them.
