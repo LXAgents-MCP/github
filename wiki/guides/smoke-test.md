@@ -74,6 +74,22 @@ jobs:
       - run: echo "this job fails on purpose" && exit 1
 ```
 
+## Over HTTP
+
+Run this once if you will use the HTTP transport. It needs only the server and a token; the walk above
+then works unchanged through a client registered as in
+[Set up HTTP with a token](setup-http-token.md).
+
+| # | Do | Expect |
+|---|---|---|
+| H1 | `npm run start:http`, then `curl http://127.0.0.1:3001/healthz` | `{"status":"ok","server":"lxagents-github","version":"…"}` with no token. |
+| H2 | `curl -i -X POST http://127.0.0.1:3001/mcp` | 401 with `WWW-Authenticate: Bearer realm="mcp"`. |
+| H3 | `tools/list` with `Authorization: Bearer $GITHUB_TOKEN` (the curl in the guide) | The 45 tools. |
+| H4 | `tools/call` `repo_read` on a repository your token can read, with that header | The repository, read as the token's owner. |
+| H5 | The same call with a valid but unrelated GitHub token for another account | A 404 for a private repository the second account cannot see — each request acts as its own token. |
+| H6 | The same call with a revoked or mistyped token | A message that GitHub rejected the token (401) and names the `Authorization: Bearer` header; the token is not in it. |
+| H7 | Start the server with `MCP_AUTH_TOKEN` set and repeat H2 | A line on stderr saying it is ignored, and still a 401: the environment is never a fallback. |
+
 ## What the documentation leaves open
 
 Each is a request shape the server sends on the strength of the documentation alone. If one behaves
@@ -99,6 +115,7 @@ differently, the tool named is the one to fix.
 | `workflow_run` | With `return_run_details: true` the pinned API version answers 200 with the run id, or 204 with none — either is handled. An input the workflow does not declare, or a workflow without a dispatch trigger, is a 422; a workflow file not on the default branch is a 404. |
 | `workflow_status` | `per_page=1` on a workflow's runs returns the newest run; a branch name with a slash works in the `branch` filter. |
 | `workflow_logs` | GitHub's 302 to a signed address is followed and the token is not sent there. A job still running gives its partial log or none; an expired log is noted; a log over 20 MB is refused with the general size message. |
+| HTTP, any tool | The token in the `Authorization` header reaches `api.github.com` as the bearer credential of that request, and two interleaved requests with different tokens act as their own users. |
 | the image | Build it, run `node src/index.js --version` in it, connect a client with `docker run --rm -i -e MCP_AUTH_TOKEN`, and check that `docker stop` returns at once. See [Docker](../environments/docker.md). |
 
 ## Reporting what differs
@@ -111,5 +128,6 @@ in this one.
 ## Related pages
 
 * [Connect a client](connect-a-client.md)
+* [Set up HTTP with a token](setup-http-token.md)
 * [Environment](../environments/env.md) — what each tool needs from the token.
 * [Security model](../security/security-model.md) — why nothing has been run live.
