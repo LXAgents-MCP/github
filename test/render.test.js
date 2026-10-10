@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { MAX_OUTPUT } from "../src/config.js";
 import { describe, fence, renderPayload } from "../src/render.js";
-import { cutText, decodeText, firstLine, head, looksBinary, short, tail } from "../src/text.js";
+import { cleanLog, cutText, decodeText, firstLine, head, looksBinary, short, tail } from "../src/text.js";
 
 test("a flat payload is a summary and one bullet per scalar, in order", () => {
   assert.equal(
@@ -106,6 +106,13 @@ test("cutText cuts at a character count and never leaves half of a surrogate pai
   assert.deepEqual(cutText("abc", 3), ["abc", false]);
   assert.deepEqual(cutText("a😀b", 2), ["a", true]); // the cut would fall inside the emoji
   assert.deepEqual(cutText("a😀b", 3), ["a😀", true]);
+});
+
+test("cleanLog drops the byte order mark and colour codes and makes every line break one kind", () => {
+  assert.equal(cleanLog("\uFEFFone\r\ntwo\rthree\n"), "one\ntwo\nthree\n");
+  assert.equal(cleanLog("\u001b[31;1mfailed\u001b[0m: \u001b[2Kdone"), "failed: done");
+  assert.equal(cleanLog("plain [31m text"), "plain [31m text");
+  assert.equal(cleanLog("a\uFEFFb"), "a\uFEFFb"); // only a leading mark is a mark
 });
 
 test("looksBinary is true for a NUL byte early on and false for text", () => {

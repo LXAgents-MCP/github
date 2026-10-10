@@ -43,6 +43,20 @@ export function cutText(text, max) {
   return [text.slice(0, end), true];
 }
 
+/**
+ * A job's log as text to read: no byte order mark, one kind of line break, and none of the
+ * colour codes that tools write for a terminal, which only add noise.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+export function cleanLog(text) {
+  return text
+    .replace(/^﻿/, "")
+    .replace(/\r\n?/g, "\n")
+    .replace(/\u001b\[[0-9;]*[A-Za-z]/g, "");
+}
+
 /** Does this look like binary data? A NUL byte early on is the usual tell. */
 export function looksBinary(bytes) {
   return bytes.subarray(0, 8000).includes(0);

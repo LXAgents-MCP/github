@@ -155,6 +155,20 @@ instructions tell a client to confirm it with the owner first.
 | `pr_review_request` | update | Ask people, teams or both to review. They must be collaborators and cannot be the author. |
 | `pr_approve` | write | Approve as the token's user, with an optional message. A person cannot approve their own pull request. |
 
+### Workflows
+
+GitHub Actions. A workflow is named by its id or by the name of its file under `.github/workflows/`,
+such as `ci.yml`; `workflow_list` shows both. A run is named by its id. GitHub serves a job's log from
+a signed address on another host, and the request follows the redirect without the token: see
+[Security model](../security/security-model.md).
+
+| Tool | Kind | Does |
+|---|---|---|
+| `workflow_list` | read | List a repository's workflows with their id, name, file path and state. Paged. |
+| `workflow_run` | write | Start a workflow by dispatch on a branch or tag (default: the default branch), with optional inputs. It runs whatever the workflow does, which may deploy or publish. The workflow needs an `on: workflow_dispatch` trigger and its file must be on the default branch. Returns the run id when GitHub gives it, and otherwise says to find the run with `workflow_status`. |
+| `workflow_status` | read | Read one run — status, conclusion, branch, commit — and its jobs, with the step that failed in each. Give a `run_id`, or a workflow (optionally on a branch) to read its latest run. A workflow with no run yet is an answer, not an error. |
+| `workflow_logs` | read | Read the logs of a run's jobs: the failed ones by default (up to five), one with `job_id`, or every job with `only_failed: false`. At most 20,000 characters in all, shared between the jobs, and each log cut to its end, where a failure is explained. Colour codes and the byte order mark are removed. A job with no log, or an expired one, is noted and the others are still read. |
+
 ## What this server does not expose
 
 | Not exposed | Why |
@@ -164,4 +178,4 @@ instructions tell a client to confirm it with the owner first.
 | HTTP | The token can delete repositories. See [Security model](../security/security-model.md). |
 | GitHub Enterprise | The API base is a constant, and another host would need a second setting. |
 | `clone`, `push` and other git transport | File tools commit through the API instead. |
-| `issue_list`, `pr_list`, `tag_create`, `issue_reopen`, inline review comments | Outside the tool list this server was built to. A tag is created by `release_create`. |
+| `issue_list`, `pr_list`, `tag_create`, `issue_reopen`, inline review comments, cancelling or re-running a run, enabling or disabling a workflow, artifacts, secrets | Outside the tool list this server was built to. A tag is created by `release_create`. |

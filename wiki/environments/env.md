@@ -62,6 +62,8 @@ token's `repo` scope is the broadest.
 | `pr_read` | `repo` | Pull requests set to read |
 | `pr_open`, `pr_comment`, `pr_close`, `pr_review_request`, `pr_approve` | `repo` | Pull requests set to write |
 | `pr_merge` | `repo` | Pull requests set to write and Contents set to write |
+| `workflow_list`, `workflow_status`, `workflow_logs` | `repo` | Actions set to read |
+| `workflow_run` | `repo` | Actions set to write |
 | `file_create`, `file_update`, `file_delete` | `repo`, plus `workflow` for a file under `.github/workflows/` | Contents set to write, plus Workflows set to write for a file under `.github/workflows/` |
 
 The permissions are listed from GitHub's REST documentation. When a token is short of one, GitHub's

@@ -149,6 +149,26 @@ export function filePath(value, field, { allowEmpty = false } = {}) {
   return { path: trimmed, encoded: segments.map(encodeURIComponent).join("/") };
 }
 
+/**
+ * Read a workflow argument: its numeric id, or the name of its file under `.github/workflows/`.
+ *
+ * A path is accepted and reduced to the file name, because that is how a workflow is written
+ * everywhere else. Nothing else can reach a URL: no slash, and a name starts with a letter or a digit.
+ *
+ * @param {unknown} value
+ * @param {string} [field]
+ * @returns {{ name: string, encoded: string }} The cleaned value, and the same as it goes into a URL.
+ */
+export function workflowName(value, field = "workflow") {
+  const name = requiredText(value, field).replace(/^\.github\/workflows\//, "");
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$/.test(name)) {
+    throw new Refused(
+      `\`${field}\` '${name}' is not a workflow. Give its numeric id, or the name of its file such as 'ci.yml' (see workflow_list).`,
+    );
+  }
+  return { name, encoded: encodeURIComponent(name) };
+}
+
 /* ------------------------------------------------------------------ paging */
 
 /**
@@ -213,7 +233,8 @@ async function readText(response, host) {
  *
  * @param {string} url
  * @param {{ method?: string, headers?: Record<string, string>, json?: unknown, token?: string, raw?: boolean }} [options]
- *   `raw` keeps the whole body as text instead of decoding JSON.
+ *   `raw` keeps the whole body of a successful answer as text instead of decoding JSON; an error answer is
+ *   still decoded, so that its message can be read.
  * @returns {Promise<{ status: number, body: any, headers: Record<string, string> }>}
  */
 export async function callApi(url, { method = "GET", headers = {}, json, token = "", raw = false } = {}) {
@@ -241,7 +262,7 @@ export async function callApi(url, { method = "GET", headers = {}, json, token =
 
   let body = null;
   if (text !== "") {
-    if (raw) {
+    if (raw && response.ok) {
       body = text;
     } else {
       try {

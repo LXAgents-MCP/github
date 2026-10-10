@@ -330,3 +330,48 @@ review comments, requesting changes, dismissing a review, enabling auto-merge, a
 request's branch.
 
 Tests: 246 passing, none failing.
+
+### Task 12 — feat/workflow-tools
+
+Landed. `workflow_list`, `workflow_run`, `workflow_status` and `workflow_logs`, pinned in
+`test/surface.js` and documented in the surface page, the token table and the security model.
+
+Checked against GitHub's REST documentation: listing workflows answers `total_count` and `workflows`,
+and every workflow endpoint takes the numeric id or the file name; runs are listed for a repository or
+for one workflow and filter by `branch`, among others; a run's jobs are listed 100 to a page with a
+`filter` that defaults to the latest attempt, each job carrying its `steps`; a job's log is a 302 to a
+text file at an address that expires after a minute. The fine-grained permissions come from GitHub's
+page of permissions required for fine-grained tokens: Actions set to read for everything here but
+dispatch, and Actions set to write for dispatch.
+
+Two things the documentation does not settle, and the tools work either way. First, the pages now
+describe only API version 2026-03-10, where a dispatch takes `ref` and `inputs` and answers 200 with the
+run's id and URLs; this server pins 2022-11-28, where a dispatch has answered 204 with no body.
+`workflow_run` therefore asks for the run details with `return_run_details: true` — a parameter the
+current page no longer lists, so it is unconfirmed — and accepts both answers: with an id it names the
+run, without one it says to find the run with `workflow_status`. Second, the page does not state the
+order of a workflow's runs; `workflow_status` takes the first of `per_page=1` as the latest, which is the
+newest-first order GitHub has used, and that is on the live-check list.
+
+Shape. `workflowName` in `src/api.js` is the fifth address helper: digits or one file name with no slash,
+and a `.github/workflows/` path is reduced to its file name. `jobShape` and `jobFields` in `src/shapes.js`
+are shared by status and logs; `failed_step` is the first step that failed, which is where to look in the
+log. `workflow_run` writes every input as a string, as the workflow reads them, takes at most 25, and
+looks up the default branch for `ref` the way `pr_open` does for `base`. `workflow_status` takes a run id
+or a workflow with an optional branch, never both; a workflow with no run yet is `found: false`, an
+answer a poller can act on, and not an error. `workflow_logs` reads the failed jobs by default, at most
+five, one request each and one after another, sharing 20,000 characters so that each log keeps its
+end; a job whose log is missing (404) or expired (410) gets a note and the rest are still read. `cleanLog`
+in `src/text.js` removes the byte order mark and the colour codes and makes the line breaks one kind.
+
+Two changes outside the new tools. `callApi` in raw mode now decodes an error answer as JSON, so a
+refused log or diff carries GitHub's message and not the raw body text. And the log redirect goes to a
+signed address on another host, which made "the token goes only to api.github.com" a claim to prove:
+Node's `fetch` drops the `Authorization` header when a redirect changes host, checked here on Node 22
+with two loopback servers, and a test in `test/api.test.js` holds `callApi` to it. The security model
+and the agent security page say so, and the isolation of the token is unchanged.
+
+Not offered, because the owner's list has no row for them: cancelling or re-running a run, enabling or
+disabling a workflow, artifacts, secrets, a run's log archive, and the logs of an earlier attempt.
+
+Tests: 277 passing, none failing.
