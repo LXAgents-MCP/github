@@ -7,11 +7,11 @@ description: Current known state of LXAgents-MCP/github — what exists, what is
 
 ## 2026-10-10
 
-**Version `0.3.0`.** `package.json` and the lockfile carry it, and the release log is
-`wiki/logs/0/3/0/CHANGELOG.md`; earlier releases are `0/2/0` and `0/1/0`. 0.3.0 separated the access token a
-client presents over HTTP (`MCP_AUTH_TOKEN`) from the GitHub key the server uses (`GITHUB_API_KEY`). No git tag
-was made, by decision (D3 in `tasks/forge-servers.md`, D8 in `tasks/http-token-auth.md`, T7 in
-`tasks/two-token-auth.md`).
+**Version `0.4.0`.** `package.json` and the lockfile carry it, and the release log is
+`wiki/logs/0/4/0/CHANGELOG.md`; earlier releases are `0/3/0`, `0/2/0` and `0/1/0`. 0.4.0 moved the HTTP defaults to
+`shared-instruction`'s, port 3000 on every interface. No git tag was made, by decision (D3 in
+`tasks/forge-servers.md`, D8 in `tasks/http-token-auth.md`, T7 in `tasks/two-token-auth.md`, H3 in
+`tasks/http-defaults.md`).
 
 **What it is.** An MCP server, stdio by default and HTTP behind an access token, `lxagents-github`, over the GitHub REST API at `api.github.com`.
 Plain JavaScript, Node ESM, no build step, two runtime dependencies: the MCP SDK and zod.
@@ -24,10 +24,10 @@ was `create_github_repo`.
 
 **Tokens.** Two. `GITHUB_API_KEY` is the GitHub token, read when a tool is called, on both transports.
 `MCP_AUTH_TOKEN` is the access token HTTP requires of a client (32 characters or more; HTTP exits 1 without it) and
-is never read over stdio or sent to GitHub. `MCP_TRANSPORT`, `PORT` and `HOST` are the only other variables, and the
+is never read over stdio or sent to GitHub. `MCP_TRANSPORT`, `PORT` (default 3000) and `HOST` (default `0.0.0.0`) are the only other variables, and the
 only flags are `--help` and `--version`.
 
-**Verified.** The suite (307 tests) replaces `fetch` and reaches no host beyond loopback. Every request shape is
+**Verified.** The suite (309 tests) replaces `fetch` and reaches no host beyond loopback. Every request shape is
 checked against GitHub's documentation and against mocks. The production-only dependency tree the image
 would install serves every tool over a real stdio pipe, and the HTTP transport is tested over real
 loopback sockets, including near-miss access tokens, the access token's absence from every request to GitHub, and real processes
