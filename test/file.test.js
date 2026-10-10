@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MAX_FILE_BYTES, MAX_LIST_ENTRIES, MAX_WRITE_BYTES } from "../src/config.js";
+import { MAX_FILE_CHARS, MAX_LIST_ENTRIES, MAX_WRITE_BYTES } from "../src/config.js";
 import { blobSha, contentsPath, encodeContent } from "../src/contents.js";
 import { TOOL as create, handle as fileCreate } from "../src/tools/file-create.js";
 import { TOOL as del, handle as fileDelete } from "../src/tools/file-delete.js";
@@ -94,7 +94,7 @@ test("file_read sends no ref by default, and reads an empty file", async (t) => 
 test("file_read falls back to Windows-1252, and cuts a long file at the limit", async (t) => {
   withToken(t);
   const latin = Buffer.from([0x63, 0x61, 0x66, 0xe9]);
-  const long = "a".repeat(MAX_FILE_BYTES + 50);
+  const long = "a".repeat(MAX_FILE_CHARS + 50);
   mockApi(t, reply(200, fileBody("", { content: latin.toString("base64"), size: 4 })), reply(200, fileBody(long)));
 
   const one = await fileRead({ repo: "o/r", path: "latin.txt" });
@@ -102,9 +102,9 @@ test("file_read falls back to Windows-1252, and cuts a long file at the limit", 
 
   const two = await fileRead({ repo: "o/r", path: "long.txt" });
   assert.equal(two.payload.truncated, true);
-  assert.equal(two.payload.text.length, MAX_FILE_BYTES);
-  assert.equal(two.payload.size, MAX_FILE_BYTES + 50);
-  assert.match(two.payload.summary, /, cut at 200000 bytes\.$/);
+  assert.equal(two.payload.text.length, MAX_FILE_CHARS);
+  assert.equal(two.payload.size, MAX_FILE_CHARS + 50);
+  assert.match(two.payload.summary, /, cut at 25000 characters\.$/);
   expectOutput(read, two.payload);
 });
 

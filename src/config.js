@@ -28,8 +28,11 @@ export const MAX_OUTPUT = 30_000;
 export const DEFAULT_PER_PAGE = 30;
 export const MAX_PER_PAGE = 100;
 
-/** Bytes of a file shown to the model. A file is read to be looked at, not ingested. */
-export const MAX_FILE_BYTES = 200_000;
+/**
+ * Characters of a file shown to the model. A file is read to be looked at, not ingested, and the
+ * limit sits below `MAX_OUTPUT` so the summary and the fields still fit in the same result.
+ */
+export const MAX_FILE_CHARS = 25_000;
 
 /** Bytes of content one write may carry. Source files fit; blobs are not what this is for. */
 export const MAX_WRITE_BYTES = 1_000_000;

@@ -92,7 +92,7 @@ one, so a change fails if the file moved on in between.
 
 | Tool | Kind | Does |
 |---|---|---|
-| `file_read` | read | Read one text file at a branch, tag or commit. Cut at 200 KB; binary files and files over 1 MB are refused. Returns its content, size and blob sha. |
+| `file_read` | read | Read one text file at a branch, tag or commit. Cut at 25,000 characters; binary files and files over 1 MB are refused. Returns its content, size and blob sha. |
 | `directory_list` | read | List the files and folders in one directory, not recursively. Omit the path for the root. |
 | `file_create` | write | Create a new file as one commit. Fails if it exists. Content up to 1 MB. |
 | `file_update` | update | Replace an existing file's whole content as one commit. Fails if it changed since the sha. |

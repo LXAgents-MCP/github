@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { MAX_OUTPUT } from "../src/config.js";
 import { describe, fence, renderPayload } from "../src/render.js";
-import { decodeText, firstLine, head, looksBinary, short, tail } from "../src/text.js";
+import { cutText, decodeText, firstLine, head, looksBinary, short, tail } from "../src/text.js";
 
 test("a flat payload is a summary and one bullet per scalar, in order", () => {
   assert.equal(
@@ -80,16 +80,16 @@ test("short, firstLine, head and tail", () => {
 });
 
 test("decodeText reads UTF-8, falls back to Windows-1252, and keeps the byte order mark", () => {
-  assert.deepEqual(decodeText(Buffer.from("héllo", "utf8")), { text: "héllo", truncated: false });
-  assert.equal(decodeText(Buffer.from([0x63, 0x61, 0x66, 0xe9])).text, "café");
-  assert.equal(decodeText(Buffer.from([0xef, 0xbb, 0xbf, 0x61])).text, "\uFEFFa");
+  assert.equal(decodeText(Buffer.from("héllo", "utf8")), "héllo");
+  assert.equal(decodeText(Buffer.from([0x63, 0x61, 0x66, 0xe9])), "café");
+  assert.equal(decodeText(Buffer.from([0xef, 0xbb, 0xbf, 0x61])), "\uFEFFa");
 });
 
-test("decodeText cuts at a byte count and drops a character the cut split", () => {
-  const bytes = Buffer.from("aé", "utf8"); // 61 c3 a9
-  assert.deepEqual(decodeText(bytes, { max: 2 }), { text: "a", truncated: true });
-  assert.deepEqual(decodeText(bytes, { max: 3 }), { text: "aé", truncated: false });
-  assert.deepEqual(decodeText(Buffer.from("abcdef"), { max: 3 }), { text: "abc", truncated: true });
+test("cutText cuts at a character count and never leaves half of a surrogate pair", () => {
+  assert.deepEqual(cutText("abcdef", 3), ["abc", true]);
+  assert.deepEqual(cutText("abc", 3), ["abc", false]);
+  assert.deepEqual(cutText("a😀b", 2), ["a", true]); // the cut would fall inside the emoji
+  assert.deepEqual(cutText("a😀b", 3), ["a😀", true]);
 });
 
 test("looksBinary is true for a NUL byte early on and false for text", () => {

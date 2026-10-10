@@ -218,9 +218,14 @@ repository are made serially, which one-call-per-tool respects.
 Shape. `src/contents.js` holds what the three write tools share: the API path, the base64 encoding
 with a 1 MB ceiling, and `blobSha`, which reads the current sha when a caller did not pass one and
 says what to do instead when there is no such file. `src/text.js` gained `decodeText`, `cli`'s UTF-8
-then Windows-1252 decoder with a byte cut that never leaves half a character, and `looksBinary`.
-`file_read` cuts at 200 000 bytes and says it did; it refuses binary files, directories, symbolic
-links and submodules, each with the tool to use instead.
+then Windows-1252 decoder, `cutText`, which cuts in characters and never leaves half a surrogate
+pair, and `looksBinary`. `file_read` cuts at 25 000 characters and says it did; it refuses binary
+files, directories, symbolic links and submodules, each with the tool to use instead.
+
+Corrected in a later commit on this branch: the limit was first written as 200 000 bytes, while a
+result is rendered to at most 30 000 characters, so a 100 KB file reported `truncated: false` and was
+cut anyway. The limit is now in characters and sits below that ceiling, so the flag is true to what
+the model sees.
 
 The security model now says plainly that everything these tools read is text someone else wrote.
 

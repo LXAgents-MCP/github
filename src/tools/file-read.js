@@ -1,18 +1,18 @@
 /** Read one text file from a repository. */
 import { z } from "zod";
 import { filePath, github, parseRepo, refName } from "../api.js";
-import { MAX_FILE_BYTES } from "../config.js";
+import { MAX_FILE_CHARS } from "../config.js";
 import { contentsPath } from "../contents.js";
 import { READ, repoArg } from "../schemas.js";
 import { Refused } from "../errors.js";
-import { decodeText, looksBinary } from "../text.js";
+import { cutText, decodeText, looksBinary } from "../text.js";
 
 export const TOOL = {
   name: "file_read",
   description:
     "Read one text file from a GitHub repository, on the default branch or at a branch, tag or " +
-    "commit. Returns its content, size and blob sha. Cut at 200 KB; binary files and files over " +
-    "1 MB are refused. Use directory_list to find a path first.",
+    "commit. Returns its content, size and blob sha. Cut at 25,000 characters; binary files and " +
+    "files over 1 MB are refused. Use directory_list to find a path first.",
   inputSchema: {
     repo: repoArg,
     path: z.string().describe("Path of the file inside the repository, e.g. 'src/index.js'."),
@@ -61,14 +61,14 @@ export async function handle(args) {
   if (looksBinary(bytes)) {
     throw new Refused(`\`path\` '${file.path}' is a binary file (${bytes.length} bytes); this tool reads text.`);
   }
-  const { text, truncated } = decodeText(bytes, { max: MAX_FILE_BYTES });
+  const [text, truncated] = cutText(decodeText(bytes), MAX_FILE_CHARS);
   const size = Number.isInteger(body.size) ? body.size : bytes.length;
 
   return {
     payload: {
       summary:
         `Read ${file.path} (${size} bytes) from ${repo.full}${ref ? ` at ${ref}` : ""}` +
-        (truncated ? `, cut at ${MAX_FILE_BYTES} bytes.` : "."),
+        (truncated ? `, cut at ${MAX_FILE_CHARS} characters.` : "."),
       path: file.path,
       sha: body.sha,
       size,
