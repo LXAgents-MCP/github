@@ -375,3 +375,34 @@ Not offered, because the owner's list has no row for them: cancelling or re-runn
 disabling a workflow, artifacts, secrets, a run's log archive, and the logs of an earlier attempt.
 
 Tests: 277 passing, none failing.
+
+### Task 13 — build/docker
+
+Landed. A `Dockerfile` and `.dockerignore` for a stdio image, and `wiki/environments/docker.md`.
+
+**The image has not been built.** The environment had a Docker client and no daemon, and starting one
+was refused, so neither the file nor the commands on the page have run as written. What was checked
+instead, and nothing more is claimed: every `COPY` source exists and none is excluded by
+`.dockerignore`; the install step, `npm ci --ignore-scripts --omit=dev`, was run in a scratch directory
+holding only the files the image copies, and the production tree it made (the MCP SDK and zod) served
+all 45 tools over a real stdio pipe and refused a call with no token; and no `ENV`, `EXPOSE` or
+`ENTRYPOINT` line exists. Not checked: the base image, the file's syntax, and `USER node` in a real
+container. It is on the live-check list to build once and run `node src/index.js --version` in it.
+
+Shape. One stage on `node:22-alpine`, because there is no build step; dependencies from the lockfile
+with scripts off; `USER node`; `CMD ["node", "src/index.js"]`. Unlike the image of the shared set it
+declares no port and sets no `ENTRYPOINT`: there is no listener to declare, and an entrypoint of ours
+would make a command after the image name run as an argument of it. The token is passed with
+`docker run -e LXAGENTS_MCP_GITHUB_API_KEY`, never an `ENV` line. The page tells a client to use
+`-i` and never `-t`, and ties the tag to the version in `package.json` without naming one.
+
+One change to the server came with it. `src/index.js` now closes and exits on `SIGTERM` as well as
+`SIGINT`. In a container the server is the first process, which the kernel gives no default action for
+a signal, so `docker stop` would otherwise wait out its grace period and kill it. The signal handlers
+are installed before the "serving" line is logged, and `test/stdio.test.js` sends each signal to a real
+process; without the handler the `SIGTERM` test fails, which was confirmed.
+
+The docs that state the process contract, the repository map, the security procedure and the
+deployment rule now cover the image, and the state file no longer says there is none.
+
+Tests: 279 passing, none failing.
