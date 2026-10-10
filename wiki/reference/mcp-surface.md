@@ -74,6 +74,16 @@ appears in one.
 | `repo_fork` | write | Fork into the token owner's account or an organization. GitHub copies it in the background, so the fork may take a moment to be readable. |
 | `repo_search` | read | Search repositories with GitHub's search syntax. Paged; GitHub serves the first 1000 matches and limits search to 30 requests a minute. |
 
+### Branches
+
+| Tool | Kind | Does |
+|---|---|---|
+| `branch_create` | write | Create a branch from the default branch, another branch, a tag or a sha. Fails if the name is taken. |
+| `branch_read` | read | Read one branch: the commit at its tip, that commit's message and date, and whether it is protected. |
+| `branch_list` | read | List branches with the sha at each tip. Paged; can filter to protected or unprotected. |
+| `branch_delete` | destroy | Delete a branch. The default branch cannot be deleted. |
+| `branch_merge` | destroy | Merge a branch or commit into another branch directly, with no pull request. Moves the base branch. |
+
 ## What this server does not expose
 
 | Not exposed | Why |

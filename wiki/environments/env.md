@@ -51,6 +51,8 @@ token's `repo` scope is the broadest.
 | `repo_update` | `repo` | Administration set to write |
 | `repo_delete` | `delete_repo` | Administration set to write. Either way the token's owner must be an admin of the repository, and an organization can forbid its members to delete. |
 | `repo_fork` | `repo` | GitHub documents no fine-grained permission for this endpoint; use a classic token if a fine-grained one is refused. |
+| `branch_read`, `branch_list` | `repo` | Contents set to read |
+| `branch_create`, `branch_delete`, `branch_merge` | `repo` | Contents set to write |
 
 The permissions are listed from GitHub's REST documentation. When a token is short of one, GitHub's
 refusal says which permission the endpoint accepts and this server repeats it, so the refusal is the
