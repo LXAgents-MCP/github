@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { TOOL as assign, handle as issueAssign } from "../src/tools/issue-assign.js";
-import { TOOL as close, handle as issueClose } from "../src/tools/issue-close.js";
-import { TOOL as comment, handle as issueComment } from "../src/tools/issue-comment.js";
-import { TOOL as label, handle as issueLabel } from "../src/tools/issue-label.js";
-import { TOOL as lock, handle as issueLock } from "../src/tools/issue-lock.js";
-import { TOOL as open, handle as issueOpen } from "../src/tools/issue-open.js";
-import { TOOL as read, handle as issueRead } from "../src/tools/issue-read.js";
+import { TOOL as assign, handle as issueAssign } from "../src/controllers/issue-assign.js";
+import { TOOL as close, handle as issueClose } from "../src/controllers/issue-close.js";
+import { TOOL as comment, handle as issueComment } from "../src/controllers/issue-comment.js";
+import { TOOL as label, handle as issueLabel } from "../src/controllers/issue-label.js";
+import { TOOL as lock, handle as issueLock } from "../src/controllers/issue-lock.js";
+import { TOOL as open, handle as issueOpen } from "../src/controllers/issue-open.js";
+import { TOOL as read, handle as issueRead } from "../src/controllers/issue-read.js";
 import { expectOutput, isRefusal, mockApi, reply, withToken, withoutToken } from "./helpers.js";
 
 /** An issue as GitHub returns it. */

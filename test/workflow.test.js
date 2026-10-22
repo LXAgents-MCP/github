@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { TOOL as list, handle as workflowList } from "../src/tools/workflow-list.js";
-import { TOOL as logs, handle as workflowLogs } from "../src/tools/workflow-logs.js";
-import { TOOL as start, handle as workflowRun } from "../src/tools/workflow-run.js";
-import { TOOL as status, handle as workflowStatus } from "../src/tools/workflow-status.js";
+import { TOOL as list, handle as workflowList } from "../src/controllers/workflow-list.js";
+import { TOOL as logs, handle as workflowLogs } from "../src/controllers/workflow-logs.js";
+import { TOOL as start, handle as workflowRun } from "../src/controllers/workflow-run.js";
+import { TOOL as status, handle as workflowStatus } from "../src/controllers/workflow-status.js";
 import { expectOutput, isRefusal, mockApi, reply, withToken } from "./helpers.js";
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";

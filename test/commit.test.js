@@ -1,9 +1,9 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { MAX_COMMITS_SHOWN, MAX_DIFF_CHARS, MAX_FILES_SHOWN } from "../src/config.js";
-import { TOOL as compare, handle as commitCompare } from "../src/tools/commit-compare.js";
-import { TOOL as list, handle as commitList } from "../src/tools/commit-list.js";
-import { TOOL as read, handle as commitRead } from "../src/tools/commit-read.js";
+import { MAX_COMMITS_SHOWN, MAX_DIFF_CHARS, MAX_FILES_SHOWN } from "../src/config/config.js";
+import { TOOL as compare, handle as commitCompare } from "../src/controllers/commit-compare.js";
+import { TOOL as list, handle as commitList } from "../src/controllers/commit-list.js";
+import { TOOL as read, handle as commitRead } from "../src/controllers/commit-read.js";
 import { expectOutput, isRefusal, mockApi, reply, withToken, withoutToken } from "./helpers.js";
 
 const SHA = "0123456789abcdef0123456789abcdef01234567";

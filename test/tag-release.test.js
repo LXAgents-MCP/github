@@ -1,14 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { findReleaseByTag } from "../src/releases.js";
-import { TOOL as create, handle as releaseCreate } from "../src/tools/release-create.js";
-import { TOOL as del, handle as releaseDelete } from "../src/tools/release-delete.js";
-import { TOOL as list, handle as releaseList } from "../src/tools/release-list.js";
-import { TOOL as read, handle as releaseRead } from "../src/tools/release-read.js";
-import { TOOL as check, handle as tagCheck } from "../src/tools/tag-check.js";
-import { TOOL as tagDel, handle as tagDelete } from "../src/tools/tag-delete.js";
-import { TOOL as getAll, handle as tagGetAll } from "../src/tools/tag-get-all.js";
-import { TOOL as get, handle as tagGet } from "../src/tools/tag-get.js";
+import { findReleaseByTag } from "../src/services/releases.js";
+import { TOOL as create, handle as releaseCreate } from "../src/controllers/release-create.js";
+import { TOOL as del, handle as releaseDelete } from "../src/controllers/release-delete.js";
+import { TOOL as list, handle as releaseList } from "../src/controllers/release-list.js";
+import { TOOL as read, handle as releaseRead } from "../src/controllers/release-read.js";
+import { TOOL as check, handle as tagCheck } from "../src/controllers/tag-check.js";
+import { TOOL as tagDel, handle as tagDelete } from "../src/controllers/tag-delete.js";
+import { TOOL as getAll, handle as tagGetAll } from "../src/controllers/tag-get-all.js";
+import { TOOL as get, handle as tagGet } from "../src/controllers/tag-get.js";
 import { expectOutput, isRefusal, mockApi, reply, withToken, withoutToken } from "./helpers.js";
 
 const COMMIT = "0123456789abcdef0123456789abcdef01234567";
