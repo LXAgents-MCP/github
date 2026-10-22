@@ -2,7 +2,7 @@
 
 Everything `lxagents-github` exposes.
 
-**It exposes tools, and nothing else.** One per module in `src/tools/`. There are no prompts and no
+**It exposes tools, and nothing else.** One per module in `src/controllers/`. There are no prompts and no
 resources, and two transports: stdio and HTTP. See [What this server does not expose](#what-this-server-does-not-expose).
 
 ## Server identity
@@ -10,8 +10,8 @@ resources, and two transports: stdio and HTTP. See [What this server does not ex
 | Field | Value |
 |---|---|
 | `name` | `lxagents-github` |
-| `version` | from `package.json`, read at import by `src/version.js` |
-| transport | stdio by default (`src/index.js`); HTTP with `MCP_TRANSPORT=http` (`src/http.js`), where every route but `GET /healthz` needs `Authorization: Bearer <MCP_AUTH_TOKEN>` |
+| `version` | from `package.json`, read at import by `src/config/version.js` |
+| transport | stdio by default (`src/index.js`); HTTP with `MCP_TRANSPORT=http` (`src/routes/http.js`), where every route but `GET /healthz` needs `Authorization: Bearer <MCP_AUTH_TOKEN>` |
 
 `initialize` also returns `instructions`: that every tool needs `GITHUB_API_KEY` in the server's environment, that
 a repository is named `owner/name`, and that tools which delete or merge are destructive and should
@@ -22,13 +22,13 @@ be confirmed with the owner first.
 ### Naming
 
 A tool is `{thing}_{action}`: `repo_create`, `branch_list`, `pr_merge`. The module that defines it
-is the same name in kebab case, `src/tools/pr-merge.js`.
+is the same name in kebab case, `src/controllers/pr-merge.js`.
 
 ### Addressing a repository
 
 Every tool that acts on a repository takes one `repo` argument, written `owner/name`. The two that
 cannot are `repo_create`, which has no repository yet, and `repo_search`, which looks across all of
-them. `repo` is parsed once, in `src/api.js`, and a value that is not exactly two valid names is
+them. `repo` is parsed once, in `src/services/api.js`, and a value that is not exactly two valid names is
 refused before any request.
 
 ### Results
