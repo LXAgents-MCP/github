@@ -104,7 +104,7 @@ authority if it disagrees with this table.
 
 ## What configures the server instead
 
-The things that are constants, in `src/config.js`, because making them settings would be a change
+The things that are constants, in `src/config/config.js`, because making them settings would be a change
 to a public surface: the API base (`https://api.github.com`), the pinned API version, the 30 second
 request timeout, the 20 MB ceiling on an answer, the 30 000 character ceiling on a result, and the
 page sizes.

@@ -16,7 +16,7 @@ description: Current known state of LXAgents-MCP/github — what exists, what is
 **What it is.** An MCP server, stdio by default and HTTP behind an access token, `lxagents-github`, over the GitHub REST API at `api.github.com`.
 Plain JavaScript, Node ESM, no build step, two runtime dependencies: the MCP SDK and zod.
 
-**Surface.** One tool per module in `src/tools/`. The full list is pinned in `test/surface.js` and
+**Surface.** One tool per module in `src/controllers/`. The full list is pinned in `test/surface.js` and
 described in `wiki/reference/mcp-surface.md`: repositories, branches, files and directories, commits,
 tags and releases, issues, pull requests and Actions workflows. A tool count is deliberately not stated
 here: it goes stale at the next module. `repo_create` was moved here from the `cli` server, where it
