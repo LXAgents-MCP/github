@@ -93,3 +93,19 @@ Checked: `npm run build` and `npm run typecheck` pass with no error; `npm test` 
 total drops from 317 only because the runner no longer executes `test/helpers.ts` and `test/surface.ts`,
 which define no tests. The built server answered `--version`, `--help`, `tools/list` over stdio, and
 `/healthz` and `tools/list` over HTTP from both `dist/index.js` and `dist/routes/http.js`.
+
+### Task 3 — docs/typescript
+
+Landed. Every page that named a source file says `.ts`; every command that runs the server says
+`dist/index.js` and is preceded by `npm run build` where a reader starts from a checkout: `README.md`,
+`wiki/environments/{setup,env,docker}.md`, `wiki/guides/{connect-a-client,setup-http-token,smoke-test}.md`,
+`wiki/reference/mcp-surface.md`, `wiki/security/security-model.md`, `wiki/information/architecture.md` (a new
+*Source and build* section and the two new model files), `.agents/wiki/context/repository-map.md` (the
+commands, the `tsconfig` and `dist/` rows, and three gotchas: a stale `dist/`, `.js` import specifiers, the
+new test total), `.agents/wiki/security/security-boundaries.md`, and `memory/state/repository-state.md`.
+Release logs and older task records keep the old paths on purpose.
+
+Left stale on purpose, and proposed to the owner instead: `.agents/rules/repository.md` still says there is no
+build step and no TypeScript and that the code is plain JavaScript, and lists `.js` paths;
+`.agents/rules/tool-surface.md` still names `repo-create.js` and the `.js` support files. They are instruction
+files, which the discovery protocol does not let this task edit.

@@ -5,21 +5,28 @@ the transport is chosen by `MCP_TRANSPORT`.
 
 ## Requirements
 
-Node.js 20 or newer. There is no build step — the server is plain JavaScript (ESM).
+Node.js 20 or newer. The server is TypeScript (ESM), compiled to `dist/` with `tsc`.
 
 ```bash
 npm install
+npm run build
 npm test
 ```
 
 `npm install` first, once per checkout: a fresh clone has no `node_modules`, and the suite then
 fails with `ERR_MODULE_NOT_FOUND`, which reads as broken code rather than an uninstalled tree.
 
+`npm run build` compiles `src/` to `dist/`, the only thing `npm start`, `npm run start:http`,
+`npm run inspect` and a client run. It is not committed, so build after cloning and after every change to
+`src/`; a stale `dist/` serves the old code. `npm run typecheck` checks `src/` and `test/` together under
+the same strict settings without writing anything.
+
 The suite replaces `fetch` and reaches no host beyond loopback. It drives a real MCP client against the
 server on an in-memory transport, spawns the real process to check what only a pipe shows (a stray
 write to stdout, a process that outlives its client), and tests each tool for the exact request it
-sends, the payload it returns, and the refusals it makes. `node --test` also executes the two
-support files under `test/`, which define no tests, so the runner's total includes them.
+sends, the payload it returns, and the refusals it makes. The tests import the TypeScript sources
+through `tsx` (`node --import tsx --test test/*.test.ts`), the spawned server included, so they never depend
+on `dist/`. The two support files, `test/helpers.ts` and `test/surface.ts`, are imported and not run.
 
 ## Run
 
@@ -50,8 +57,8 @@ GITHUB_API_KEY=<token> MCP_AUTH_TOKEN=$(openssl rand -hex 32) npm run start:http
 See [Set up HTTP with two tokens](../guides/setup-http-token.md). The two flags:
 
 ```bash
-node src/index.js --help       # usage, on stderr
-node src/index.js --version    # name and version, on stderr
+node dist/index.js --help       # usage, on stderr
+node dist/index.js --version    # name and version, on stderr
 ```
 
 ## Inspect it

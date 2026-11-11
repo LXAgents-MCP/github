@@ -13,9 +13,9 @@ local install of the HTTP transport, on loopback, run without `MCP_AUTH_TOKEN`; 
 `tasks/two-token-auth.md`, H3 in `tasks/http-defaults.md`, A3 in `tasks/src-architecture.md`, L6 in `tasks/local-auth-token.md`).
 
 **What it is.** An MCP server, stdio by default and HTTP behind an access token, `lxagents-github`, over the GitHub REST API at `api.github.com`.
-Plain JavaScript, Node ESM, no build step, two runtime dependencies: the MCP SDK and zod.
+TypeScript under `strict`, Node ESM, compiled to `dist/` by `npm run build` (since the TypeScript migration, `tasks/typescript.md`); two runtime dependencies, the MCP SDK and zod, and `typescript`, `@types/node` and `tsx` for development.
 
-**Surface.** One tool per module in `src/controllers/`. The full list is pinned in `test/surface.js` and
+**Surface.** One tool per module in `src/controllers/`. The full list is pinned in `test/surface.ts` and
 described in `wiki/reference/mcp-surface.md`: repositories, branches, files and directories, commits,
 tags and releases, issues, pull requests and Actions workflows. A tool count is deliberately not stated
 here: it goes stale at the next module. `repo_create` was moved here from the `cli` server, where it
@@ -28,7 +28,7 @@ with no token, answers only requests whose `Host` and `Origin` name loopback (`d
 `MCP_TRANSPORT`, `PORT` (default 3000) and `HOST` (default `0.0.0.0` with a token, `127.0.0.1` without) are the only other variables, and the
 only flags are `--help` and `--version`.
 
-**Verified.** The suite (317 tests) replaces `fetch` and reaches no host beyond loopback. Every request shape is
+**Verified.** The suite (315 tests, run from source through `tsx`) replaces `fetch` and reaches no host beyond loopback. Every request shape is
 checked against GitHub's documentation and against mocks. The production-only dependency tree the image
 would install serves every tool over a real stdio pipe, and the HTTP transport is tested over real
 loopback sockets, including near-miss access tokens, the access token's absence from every request to GitHub, and real processes
