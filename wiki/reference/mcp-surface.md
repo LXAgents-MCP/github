@@ -28,7 +28,7 @@ is the same name in kebab case, `src/controllers/pr-merge.js`.
 
 Every tool that acts on a repository takes one `repo` argument, written `owner/name`. The two that
 cannot are `repo_create`, which has no repository yet, and `repo_search`, which looks across all of
-them. `repo` is parsed once, in `src/services/api.js`, and a value that is not exactly two valid names is
+them. `repo` is parsed once, in `src/models/address.js`, and a value that is not exactly two valid names is
 refused before any request.
 
 ### Results
