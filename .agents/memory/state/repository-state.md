@@ -7,10 +7,12 @@ description: Current known state of LXAgents-MCP/github — what exists, what is
 
 ## 2026-11-11
 
-**Version `0.6.0`.** `package.json` and the lockfile carry it, and the release log is
-`wiki/logs/0/6/0/CHANGELOG.md`; earlier releases are `0/5/0`, `0/4/0`, `0/3/0`, `0/2/0` and `0/1/0`. 0.6.0 lets a
-local install of the HTTP transport, on loopback, run without `MCP_AUTH_TOKEN`; a server install still requires it. No git tag was made, by decision (D3 in `tasks/forge-servers.md`, D8 in `tasks/http-token-auth.md`, T7 in
-`tasks/two-token-auth.md`, H3 in `tasks/http-defaults.md`, A3 in `tasks/src-architecture.md`, L6 in `tasks/local-auth-token.md`).
+**Version `0.7.0`.** `package.json` and the lockfile carry it, and the release log is
+`wiki/logs/0/7/0/CHANGELOG.md`; earlier releases are `0/6/1`, `0/6/0`, `0/5/0`, `0/4/0`, `0/3/0`, `0/2/0` and `0/1/0`.
+0.7.0 moves the server and its tests to TypeScript compiled to `dist/`; a client now runs `dist/index.js`. No git
+tag was made, by decision (D3 in `tasks/forge-servers.md`, D8 in `tasks/http-token-auth.md`, T7 in
+`tasks/two-token-auth.md`, H3 in `tasks/http-defaults.md`, A3 in `tasks/src-architecture.md`, L6 in
+`tasks/local-auth-token.md`, D5 in `tasks/typescript.md`).
 
 **What it is.** An MCP server, stdio by default and HTTP behind an access token, `lxagents-github`, over the GitHub REST API at `api.github.com`.
 TypeScript under `strict`, Node ESM, compiled to `dist/` by `npm run build` (since the TypeScript migration, `tasks/typescript.md`); two runtime dependencies, the MCP SDK and zod, and `typescript`, `@types/node` and `tsx` for development.

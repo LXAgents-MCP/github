@@ -109,3 +109,9 @@ Left stale on purpose, and proposed to the owner instead: `.agents/rules/reposit
 build step and no TypeScript and that the code is plain JavaScript, and lists `.js` paths;
 `.agents/rules/tool-surface.md` still names `repo-create.js` and the `.js` support files. They are instruction
 files, which the discovery protocol does not let this task edit.
+
+### Task 4 — release/0.7.0
+
+Landed: `package.json` and the lockfile's own version are `0.7.0`; `wiki/logs/0/7/0/CHANGELOG.md` and its row in
+`logs-index.md`, newest first; `memory/state/repository-state.md` names the version. No tag, nothing
+published. The `PR` column is filled by a closing commit on this branch once every pull request is open.
