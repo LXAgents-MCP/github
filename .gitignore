@@ -22,3 +22,6 @@ coverage/
 # Agents
 /.agents/plans/
 .mcp.json
+
+# Build output
+dist/

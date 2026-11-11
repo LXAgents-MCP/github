@@ -1,0 +1,55 @@
+/** Does a tag exist? */
+import { z } from "zod";
+import { github } from "../services/api.js";
+import { parseRepo, refName, refPath } from "../models/address.js";
+import { READ, repoArg } from "../models/schemas.js";
+import { short } from "../utils/text.js";
+import type { ToolDefinition, ToolResult } from "../models/tool.js";
+
+export const TOOL: ToolDefinition = {
+  name: "tag_check",
+  description:
+    "Check whether a tag exists in a GitHub repository, and if it does, what it points at and whether " +
+    "it is annotated. A missing tag is an answer, not an error. Use it before creating a release, or " +
+    "to avoid reusing a tag name.",
+  inputSchema: {
+    repo: repoArg,
+    tag: z.string().describe("Tag name, e.g. 'v1.2.0'."),
+  },
+  outputSchema: {
+    exists: z.boolean(),
+    tag: z.string(),
+    sha: z.string().optional(),
+    annotated: z.boolean().optional(),
+  },
+  annotations: READ,
+};
+
+export async function handle(args: { repo?: unknown; tag?: unknown }): Promise<ToolResult> {
+  const repo = parseRepo(args.repo);
+  const tag = refName(args.tag, "tag");
+
+  // A tag that is not there is the answer to this call, so a 404 is returned and not refused.
+  const { status, body } = await github("GET", `${repo.path}/git/ref/tags/${refPath(tag)}`, {
+    allow: [404],
+    what: `look for the tag '${tag}' in ${repo.full}`,
+  });
+
+  if (status === 404 || !body?.object?.sha) {
+    return {
+      payload: { summary: `Tag ${tag} does not exist in ${repo.full}.`, exists: false, tag },
+      ok: true,
+    };
+  }
+  const annotated = body.object.type === "tag";
+  return {
+    payload: {
+      summary: `Tag ${tag} exists in ${repo.full} (${annotated ? "annotated" : "lightweight"}) and points at ${short(body.object.sha)}.`,
+      exists: true,
+      tag,
+      sha: body.object.sha,
+      annotated,
+    },
+    ok: true,
+  };
+}
