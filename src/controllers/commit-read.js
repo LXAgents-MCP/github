@@ -1,6 +1,7 @@
 /** Read one commit. */
 import { z } from "zod";
-import { github, parseRepo, refName, refPath } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo, refName, refPath } from "../models/address.js";
 import { optionalFlag } from "../models/args.js";
 import { MAX_DIFF_CHARS, MAX_FILES_SHOWN } from "../config/config.js";
 import { READ, repoArg } from "../models/schemas.js";

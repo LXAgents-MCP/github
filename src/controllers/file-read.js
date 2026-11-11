@@ -1,6 +1,7 @@
 /** Read one text file from a repository. */
 import { z } from "zod";
-import { filePath, github, parseRepo, refName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { filePath, parseRepo, refName } from "../models/address.js";
 import { MAX_FILE_CHARS } from "../config/config.js";
 import { contentsPath } from "../services/contents.js";
 import { READ, repoArg } from "../models/schemas.js";

@@ -1,6 +1,7 @@
 /** Replace a file's content in a repository, as a commit. */
 import { z } from "zod";
-import { filePath, github, parseRepo, refName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { filePath, parseRepo, refName } from "../models/address.js";
 import { optionalText, rawText, requiredText } from "../models/args.js";
 import { blobSha, contentsPath, encodeContent } from "../services/contents.js";
 import { UPDATE, repoArg } from "../models/schemas.js";

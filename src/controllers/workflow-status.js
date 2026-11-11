@@ -1,6 +1,7 @@
 /** Read the state of a GitHub Actions workflow run and its jobs. */
 import { z } from "zod";
-import { github, parseRepo, refName, workflowName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo, refName, workflowName } from "../models/address.js";
 import { optionalInt, optionalText } from "../models/args.js";
 import { MAX_PER_PAGE } from "../config/config.js";
 import { Refused } from "../utils/errors.js";

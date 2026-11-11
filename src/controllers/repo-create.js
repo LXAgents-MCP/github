@@ -5,13 +5,14 @@
  * and the wording of its refusals are unchanged.
  */
 import { z } from "zod";
-import { REPO_NAME, github } from "../services/api.js";
+import { github } from "../services/api.js";
+import { REPO_NAME } from "../models/address.js";
 import { optionalFlag, optionalText, requiredText } from "../models/args.js";
 import { Refused } from "../utils/errors.js";
 import { WRITE } from "../models/schemas.js";
 
 // GitHub's own rule for an organization login: letters, digits and '-', up to 39 characters.
-// A repository name's rule is shared with the other tools, in `src/services/api.js`.
+// A repository name's rule is shared with the other tools, in `src/models/address.js`.
 const ORG_NAME = /^[A-Za-z0-9-]{1,39}$/;
 
 export const TOOL = {

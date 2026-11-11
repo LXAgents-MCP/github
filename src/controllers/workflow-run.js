@@ -1,6 +1,7 @@
 /** Start a GitHub Actions workflow by dispatch. */
 import { z } from "zod";
-import { github, parseRepo, refName, workflowName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo, refName, workflowName } from "../models/address.js";
 import { MAX_DISPATCH_INPUTS } from "../config/config.js";
 import { Refused } from "../utils/errors.js";
 import { WRITE, repoArg } from "../models/schemas.js";

@@ -1,6 +1,7 @@
 /** Comment on a pull request's conversation. */
 import { z } from "zod";
-import { github, parseRepo } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo } from "../models/address.js";
 import { rawText, requiredInt } from "../models/args.js";
 import { WRITE, repoArg } from "../models/schemas.js";
 import { expectBody } from "../models/shapes.js";

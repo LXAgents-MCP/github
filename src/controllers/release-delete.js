@@ -1,6 +1,7 @@
 /** Delete a release, keeping its tag. */
 import { z } from "zod";
-import { github, parseRepo, refName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo, refName } from "../models/address.js";
 import { optionalInt } from "../models/args.js";
 import { Refused } from "../utils/errors.js";
 import { findReleaseByTag } from "../services/releases.js";

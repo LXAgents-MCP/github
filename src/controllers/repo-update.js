@@ -1,6 +1,7 @@
 /** Change a repository's settings. */
 import { z } from "zod";
-import { REPO_NAME, github, parseRepo, refName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { REPO_NAME, parseRepo, refName } from "../models/address.js";
 import { maybeFlag, optionalText, rawText } from "../models/args.js";
 import { Refused } from "../utils/errors.js";
 import { UPDATE, repoArg } from "../models/schemas.js";

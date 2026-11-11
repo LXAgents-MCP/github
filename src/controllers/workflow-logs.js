@@ -1,6 +1,7 @@
 /** Read the logs of the jobs of a GitHub Actions workflow run. */
 import { z } from "zod";
-import { github, parseRepo } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo } from "../models/address.js";
 import { optionalFlag, optionalInt, requiredInt } from "../models/args.js";
 import { MAX_LOG_CHARS, MAX_LOG_JOBS, MAX_PER_PAGE } from "../config/config.js";
 import { Refused } from "../utils/errors.js";

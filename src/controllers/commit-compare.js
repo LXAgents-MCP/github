@@ -1,6 +1,7 @@
 /** Compare two refs. */
 import { z } from "zod";
-import { github, parseRepo, refName, refPath } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo, refName, refPath } from "../models/address.js";
 import { MAX_COMMITS_SHOWN, MAX_FILES_SHOWN } from "../config/config.js";
 import { READ, repoArg } from "../models/schemas.js";
 import { expectBody } from "../models/shapes.js";

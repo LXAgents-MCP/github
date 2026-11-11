@@ -1,6 +1,7 @@
 /** Lock or unlock an issue's conversation. */
 import { z } from "zod";
-import { github, parseRepo } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo } from "../models/address.js";
 import { oneOf, optionalFlag, requiredInt } from "../models/args.js";
 import { UPDATE, repoArg } from "../models/schemas.js";
 

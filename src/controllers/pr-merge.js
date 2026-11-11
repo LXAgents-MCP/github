@@ -1,6 +1,7 @@
 /** Merge a pull request. */
 import { z } from "zod";
-import { github, parseRepo } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo } from "../models/address.js";
 import { oneOf, optionalText, rawText, requiredInt } from "../models/args.js";
 import { DESTROY, repoArg } from "../models/schemas.js";
 import { short } from "../utils/text.js";

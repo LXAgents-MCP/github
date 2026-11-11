@@ -1,5 +1,6 @@
 /** Read one repository. */
-import { github, parseRepo } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo } from "../models/address.js";
 import { READ, repoArg } from "../models/schemas.js";
 import { describeRepository, expectBody, repositoryFields, repositoryShape } from "../models/shapes.js";
 

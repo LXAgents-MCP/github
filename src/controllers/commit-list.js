@@ -1,6 +1,8 @@
 /** List the commits of a branch. */
 import { z } from "zod";
-import { filePath, github, pageQuery, paging, parseRepo, refName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { filePath, parseRepo, refName } from "../models/address.js";
+import { pageQuery, paging } from "../models/paging.js";
 import { optionalDate, optionalText } from "../models/args.js";
 import { READ, pagingArgs, pagingOut, repoArg } from "../models/schemas.js";
 import { firstLine } from "../utils/text.js";

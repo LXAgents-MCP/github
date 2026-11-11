@@ -1,6 +1,7 @@
 /** Delete a file from a repository, as a commit. */
 import { z } from "zod";
-import { filePath, github, parseRepo, refName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { filePath, parseRepo, refName } from "../models/address.js";
 import { optionalText, requiredText } from "../models/args.js";
 import { blobSha, contentsPath } from "../services/contents.js";
 import { DESTROY, repoArg } from "../models/schemas.js";

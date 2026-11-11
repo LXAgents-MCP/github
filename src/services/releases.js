@@ -6,7 +6,8 @@
  * finds nothing the list is searched. Without this, a draft could be created and then neither read
  * nor deleted by the same name.
  */
-import { github, refPath } from "./api.js";
+import { github } from "./api.js";
+import { refPath } from "../models/address.js";
 import { Refused } from "../utils/errors.js";
 
 const PAGES_SEARCHED = 3;
