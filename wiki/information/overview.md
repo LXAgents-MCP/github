@@ -42,8 +42,9 @@ Which of these exist in a given version is listed, tool by tool, in
 A tool that took the GitHub token as an argument would put it in a prompt and a transcript. So the server reads
 it, as `GITHUB_API_KEY`, from its own environment, set by the client's configuration over stdio, when a tool is
 called rather than at startup, so a server without one still starts and says what is missing when asked. Over
-HTTP a second secret appears: the access token, `MCP_AUTH_TOKEN`, which a client sends as
-`Authorization: Bearer <token>` to be allowed in. It never reaches GitHub, and HTTP will not start without it.
+HTTP a second secret can appear: the access token, `MCP_AUTH_TOKEN`, which a client sends as
+`Authorization: Bearer <token>` to be allowed in. It never reaches GitHub. A server install, listening where other
+machines can reach it, will not start without it; a local install, on loopback only, does not need it.
 See [Environment](../environments/env.md) and [Set up HTTP with two tokens](../guides/setup-http-token.md).
 
 ## What it is not
@@ -51,8 +52,9 @@ See [Environment](../environments/env.md) and [Set up HTTP with two tokens](../g
 * **Not a git client.** It does not clone or push. File tools commit through the API.
 * **Not GitHub Enterprise.** The API base is a constant; supporting another host would need a
   second setting, which is a decision for the owner.
-* **Not a hosted service.** The HTTP transport is yours to run, it listens on every interface
-  by default, it will not start without an access token, and it needs TLS in front before it faces a network. See
+* **Not a hosted service.** The HTTP transport is yours to run. Without an access token it listens on this
+  machine only; with one it listens on every interface by default. It will not start on a reachable address
+  without an access token, and it needs TLS in front before it faces a network. See
   [Security model](../security/security-model.md).
 
 ## Related pages
