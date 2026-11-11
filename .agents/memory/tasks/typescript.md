@@ -55,3 +55,41 @@ their own chains; no chain depends on another.
 
 Landed: this record and its row in `memory-index.md`. Nothing outside `.agents/` changes. The `PR`
 column is filled by the release task.
+
+### Task 2 — build/typescript
+
+Landed.
+
+* **Dependencies.** `@modelcontextprotocol/sdk` 1.32.2 and `zod` 4.6.7, the latest; `typescript` 7.0.2,
+  `@types/node` 26.6.6 and `tsx` 4.23.15 as dev dependencies. No Express import, so no
+  `@types/express`. `npm audit fix` cleared four advisories in transitive dependencies (`body-parser`,
+  `fast-uri`, `ip-address`, `qs`); `npm audit` reports 0.
+* **Configuration.** `tsconfig.json` builds `src/` to `dist/` (ES2022, NodeNext, strict, `types: ["node"]`,
+  `skipLibCheck`). `tsconfig.test.json` extends it with no emit over `src/` and `test/`, run by
+  `npm run typecheck`, so the tests are held to the same strict rules without being compiled.
+  `dist/` is ignored by git and by the image context.
+* **Conversion.** Every file renamed `.js` to `.ts`; relative imports keep their `.js` specifiers, which
+  NodeNext resolves to the `.ts` source. JSDoc types became TypeScript types and the type tags were
+  dropped from the comments; the prose stays. New type-only modules: `src/models/tool.ts` (`ToolDefinition`,
+  `ToolResult`, `Payload`, `ToolSpec`) and `src/models/github-object.ts` (`GitHubObject`, a JSON object as
+  GitHub returns it, read field by field). `ApiAnswer` and `CallOptions` in `src/services/client.ts`,
+  `GitHubOptions` in `src/services/api.ts`, `Explain` and `FailureContext` in `src/services/failure.ts`,
+  `HttpServerOptions` and `RunningHttpServer` in `src/routes/http.ts`, `ErrorLike` in `src/utils/errors.ts`.
+  Overloads on `oneOf`, `rawText` and `textList` give a non-optional result when a fallback or
+  `required: true` is passed, replacing three JSDoc casts. The only explicit `any`s are the decoded body of
+  an answer and `GitHubObject`, both documented.
+* **Registry.** `isToolModule` accepts `.ts` and `.js` modules, never `.d.ts` or the registry itself, and the
+  registry test uses it, so the file-name check holds from `src/` and from `dist/`.
+* **Behaviour.** One visible text changes on purpose: `--help` says `Usage: node dist/index.js`. The
+  `tools/list` answer of the built server is byte-identical to the one `master` serves.
+* **package.json.** `main` and `bin` are `dist/index.js` and `files` ships `dist`; `build` is `tsc`;
+  `start`, `start:http` and `inspect` run `dist/`; `test` is `node --import tsx --test test/*.test.ts`.
+* **Image.** The Dockerfile has a build stage that runs `npm ci` and `npm run build`, and a runtime stage
+  with `npm ci --omit=dev` and `dist/` only; `CMD` is `node dist/index.js`. There is no Docker daemon here,
+  so the image was not built; its steps were replayed by hand in a scratch directory and the result
+  printed its version.
+
+Checked: `npm run build` and `npm run typecheck` pass with no error; `npm test` passes 315 of 315. The
+total drops from 317 only because the runner no longer executes `test/helpers.ts` and `test/surface.ts`,
+which define no tests. The built server answered `--version`, `--help`, `tools/list` over stdio, and
+`/healthz` and `tools/list` over HTTP from both `dist/index.js` and `dist/routes/http.js`.

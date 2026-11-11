@@ -27,3 +27,4 @@ Dockerfile
 .idea
 .vscode
 coverage
+dist
