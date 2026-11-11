@@ -6,9 +6,10 @@ cannot run Node 20.
 
 > **This image has not been built.** The environment this was written in had a Docker client and no
 > daemon, so neither the `Dockerfile` nor the commands on this page have been run as written. What was
-> checked instead: every `COPY` source exists and is not excluded by `.dockerignore`; the install step,
-> `npm ci --ignore-scripts --omit=dev`, was run in a scratch directory holding only what the image
-> copies, and the production-only tree it produced served every tool over a real stdio pipe; and
+> checked instead: every `COPY` source exists and is not excluded by `.dockerignore`; both stages'
+> steps — `npm ci --ignore-scripts` and `npm run build`, then `npm ci --ignore-scripts --omit=dev` beside
+> the compiled `dist/` — were replayed in scratch directories holding only what the image copies, and the
+> result printed its version (an earlier, single-stage image's tree served every tool over a real stdio pipe); and
 > `SIGTERM` is tested. Not checked: the base image, the `Dockerfile`'s syntax, and `USER node` in a real
 > container. Build it once and run the check at the end of this page before relying on it.
 
@@ -18,6 +19,9 @@ cannot run Node 20.
   reproducibility, pin the base image by digest.
 * **A clean dependency tree.** `npm ci --ignore-scripts --omit=dev` from the lockfile. `npm ci` fails
   rather than resolving something the lockfile does not contain.
+* **A build that leaves nothing behind.** A first stage installs the whole tree, compiler included, and runs
+  `npm run build`; the image is a second stage that copies only the compiled `dist/` from it, so neither
+  the TypeScript compiler nor the sources ship.
 * **A non-root process.** The image ends as `USER node`.
 * **Isolation from the host.** The server reads no host file and runs no command either way; the
   container also keeps it off the host's file system altogether.
@@ -97,11 +101,11 @@ the host. **This path, like the rest of the image, has not been run in a contain
 
 | Path | Why |
 |---|---|
-| `src/` | The server. |
+| `dist/` | The server, compiled from `src/` in the build stage. |
 | `package.json`, `package-lock.json` | Dependency resolution, and the version the server reports. |
 | `node_modules/` | The production tree: the MCP SDK and zod. Installed in the image, never copied in. |
 
-`.dockerignore` keeps the rest out: `test`, `wiki`, `.agents`, `.claude`, `AGENTS.md`, `README.md`,
+`.dockerignore` keeps the rest out: `test`, a local `dist`, `wiki`, `.agents`, `.claude`, `AGENTS.md`, `README.md`,
 `.git`, any `.env` file and local noise. **The image therefore cannot run its own test suite** —
 `npm test` needs `test/`, and the suite is a gate on the repository, not on the artifact.
 
@@ -113,14 +117,14 @@ is no compose file either: a stdio server is not a service, and `docker compose 
 no stdin attached, so it would exit at once. A deployment — a registry, an orchestrator, a schedule — is
 the owner's decision, not this repository's.
 
-There is also no `ENTRYPOINT`. The whole default is `CMD ["node", "src/index.js"]`, so the base image's
+There is also no `ENTRYPOINT`. The whole default is `CMD ["node", "dist/index.js"]`, so the base image's
 own entrypoint stays and a command after the image name runs as written. An `ENTRYPOINT` of ours would
-turn `docker run <image> node src/index.js --version` into `node src/index.js node src/index.js --version`.
+turn `docker run <image> node dist/index.js --version` into `node dist/index.js node dist/index.js --version`.
 
 ## Verifying an image
 
 ```bash
-docker run --rm "lxagents-github:$VERSION" node src/index.js --version
+docker run --rm "lxagents-github:$VERSION" node dist/index.js --version
 ```
 
 Prints `lxagents-github <version>` on stderr and exits 0. That shows the entrypoint resolves, the

@@ -11,55 +11,59 @@ agent-facing orientation and links out rather than restating.
 ## What this repository is
 
 `LXAgents-MCP/github` — an MCP server named `lxagents-github` that gives an LLM access to GitHub
-through the REST API, over stdio or HTTP. Plain JavaScript, Node ESM, no build step. It is a **consumer**
+through the REST API, over stdio or HTTP. TypeScript, Node ESM, compiled to `dist/` by `tsc` (`npm run build`). It is a **consumer**
 of the shared instruction set and the **producer** of the tool surface in `src/controllers/`; see
 [`../../rules/repository.md`](../../rules/repository.md).
 
 ## What lives where
 
-`src/` is `index.js` plus six folders by role — `routes/`, `controllers/` (the tools), `services/`, `models/`,
+`src/` is `index.ts` plus six folders by role — `routes/`, `controllers/` (the tools), `services/`, `models/`,
 `utils/` and `config/`. Which module goes where, and why, is in
 [`wiki/information/architecture.md`](../../../wiki/information/architecture.md#where-the-code-lives).
 
 | Path | Contents | Touch it when |
 |---|---|---|
-| `src/index.js` | The one entry point: `--help`, `--version`, `MCP_TRANSPORT`, the stdio transport, `SIGINT` and `SIGTERM`. | The process contract. |
-| `src/routes/http.js` | The HTTP transport and the only listener: `POST /mcp`, `GET /healthz`, a fresh stateless server per request; `PORT` and `HOST` are read in `src/config/http-settings.js`. Also what `npm run start:http` runs. | Anything about serving over HTTP. |
-| `src/services/auth.js` | The two secrets: the access token for HTTP (`MCP_AUTH_TOKEN`: the 32-character floor, the bearer parser, the constant-time comparison) and the GitHub key (`GITHUB_API_KEY`). | Anything about either secret. |
-| `src/routes/server.js` | Builds one `McpServer`, registers every tool, shapes results, and carries the `instructions` text every client reads at `initialize`. | The protocol surface. |
-| `src/services/api.js` | `github()`: the one place a GitHub URL is built and a call is made. | How a call is addressed. |
-| `src/services/client.js`, `src/services/failure.js` | `callApi`, one request with a timeout and a size cap; and the wording of every failure. | How a call is made, or fails. |
-| `src/models/address.js`, `src/models/paging.js` | `parseRepo`, `refName`, `refPath`, `filePath`, `workflowName`: path parts validated and encoded; `pageQuery` and `paging`. | A new kind of path part, or paging. |
-| `src/models/args.js` | Argument checks: text, flags, whole numbers, choices, lists. | A new kind of argument. |
-| `src/utils/render.js` | The one renderer from a payload to the text the model reads. | How a result reads. |
-| `src/models/schemas.js` | Shared zod fragments (`repoArg`, paging) and the four annotation sets. | A fragment or hint several tools share. |
-| `src/utils/text.js` | `short`, `firstLine`, `head`, `tail`, `cutText`, `decodeText`, `looksBinary`, `cleanLog`. | Cutting, decoding or cleaning text. |
-| `src/models/shapes.js` | GitHub's objects as the tools report them — a repository, a release, an issue, a job — each a schema and the function that fills it, and `expectBody`, which checks an answer is the object expected. | A second tool returns an object another already does. |
-| `src/services/contents.js`, `src/services/releases.js` | What several tools share: a file's path, encoding and blob sha; finding a release by its tag, drafts included. | Those two subjects. |
-| `src/config/config.js` | Every constant: the variable name, API base and version pin, timeout, limits, the HTTP defaults. | Changing a limit. |
-| `src/utils/errors.js`, `src/utils/log.js`, `src/config/version.js` | `Refused`; the stderr logger; `ROOT`, `VERSION` and `SERVER_NAME`. | Rarely. |
-| `src/controllers/` | `index.js`, the registry, and one module per tool. | Adding or changing a tool — **a release**. |
-| `Dockerfile`, `.dockerignore` | The image (stdio by default, HTTP when told to): `node:22-alpine`, `npm ci --ignore-scripts --omit=dev`, `USER node`, `CMD ["node", "src/index.js"]`, and nothing else. It has never been built. | The image changes — and say it is unbuilt if it still is. |
-| `test/` | One file per subject, plus `helpers.js` and `surface.js`, which every other file imports. | Always. Every behavioural change ships with a test. |
+| `src/index.ts` | The one entry point: `--help`, `--version`, `MCP_TRANSPORT`, the stdio transport, `SIGINT` and `SIGTERM`. | The process contract. |
+| `src/routes/http.ts` | The HTTP transport and the only listener: `POST /mcp`, `GET /healthz`, a fresh stateless server per request; `PORT` and `HOST` are read in `src/config/http-settings.ts`. Also what `npm run start:http` runs. | Anything about serving over HTTP. |
+| `src/services/auth.ts` | The two secrets: the access token for HTTP (`MCP_AUTH_TOKEN`: the 32-character floor, the bearer parser, the constant-time comparison) and the GitHub key (`GITHUB_API_KEY`). | Anything about either secret. |
+| `src/routes/server.ts` | Builds one `McpServer`, registers every tool, shapes results, and carries the `instructions` text every client reads at `initialize`. | The protocol surface. |
+| `src/services/api.ts` | `github()`: the one place a GitHub URL is built and a call is made. | How a call is addressed. |
+| `src/services/client.ts`, `src/services/failure.ts` | `callApi`, one request with a timeout and a size cap; and the wording of every failure. | How a call is made, or fails. |
+| `src/models/address.ts`, `src/models/paging.ts` | `parseRepo`, `refName`, `refPath`, `filePath`, `workflowName`: path parts validated and encoded; `pageQuery` and `paging`. | A new kind of path part, or paging. |
+| `src/models/args.ts` | Argument checks: text, flags, whole numbers, choices, lists. | A new kind of argument. |
+| `src/utils/render.ts` | The one renderer from a payload to the text the model reads. | How a result reads. |
+| `src/models/schemas.ts` | Shared zod fragments (`repoArg`, paging) and the four annotation sets. | A fragment or hint several tools share. |
+| `src/utils/text.ts` | `short`, `firstLine`, `head`, `tail`, `cutText`, `decodeText`, `looksBinary`, `cleanLog`. | Cutting, decoding or cleaning text. |
+| `src/models/shapes.ts` | GitHub's objects as the tools report them — a repository, a release, an issue, a job — each a schema and the function that fills it, and `expectBody`, which checks an answer is the object expected. | A second tool returns an object another already does. |
+| `src/services/contents.ts`, `src/services/releases.ts` | What several tools share: a file's path, encoding and blob sha; finding a release by its tag, drafts included. | Those two subjects. |
+| `src/config/config.ts` | Every constant: the variable name, API base and version pin, timeout, limits, the HTTP defaults. | Changing a limit. |
+| `src/utils/errors.ts`, `src/utils/log.ts`, `src/config/version.ts` | `Refused`; the stderr logger; `ROOT`, `VERSION` and `SERVER_NAME`. | Rarely. |
+| `src/controllers/` | `index.ts`, the registry, and one module per tool. | Adding or changing a tool — **a release**. |
+| `Dockerfile`, `.dockerignore` | The image (stdio by default, HTTP when told to): a `node:22-alpine` build stage that runs `npm ci --ignore-scripts` and `npm run build`, then a runtime stage with `npm ci --ignore-scripts --omit=dev`, the compiled `dist/`, `USER node` and `CMD ["node", "dist/index.js"]`. It has never been built. | The image changes — and say it is unbuilt if it still is. |
+| `tsconfig.json`, `tsconfig.test.json` | The build (`src/` to `dist/`, strict, NodeNext) and the type check of `src/` and `test/` together, with no output. | A compiler setting changes. |
+| `dist/` | Build output, ignored by git. Not a source: edit `src/` and build. | Never by hand. |
+| `test/` | One file per subject, plus `helpers.ts` and `surface.ts`, which every other file imports. | Always. Every behavioural change ships with a test. |
 | `.agents/` | This repository's own rules, indexes, agent wiki and memory. | You are changing something true only here. |
 | `wiki/` | Human documentation, and `wiki/logs/` for release history. | A person needs to read it. |
 
-There is no `dist/`, no `src/transport/` and no `content/`; HTTP is `src/routes/http.js` and nothing else. If a file you are about to
-edit is under one of the first three, it does not exist here.
+There is no `src/transport/` and no `content/`; HTTP is `src/routes/http.ts` and nothing else. If a file you are about to
+edit is under either, it does not exist here.
 
 ## Entry point
 
-There is **one**: `src/index.js`, what an MCP client spawns. It reads `MCP_TRANSPORT`: stdio connects a
+There is **one**: `src/index.ts`, compiled to `dist/index.js`, which is what an MCP client spawns. It reads `MCP_TRANSPORT`: stdio connects a
 stdio transport and exits by itself when its client goes away, because stdin closes; `http` hands over to
-`src/routes/http.js`. Either handles `SIGINT` and `SIGTERM`, and nothing writes to stdout. Behind it,
-`src/routes/server.js` calls `createServer()`, which registers whatever `src/controllers/index.js` discovered. (`npm run
-start:http` runs `src/routes/http.js` directly.)
+`src/routes/http.ts`. Either handles `SIGINT` and `SIGTERM`, and nothing writes to stdout. Behind it,
+`src/routes/server.ts` calls `createServer()`, which registers whatever `src/controllers/index.ts` discovered. (`npm run
+start:http` runs the compiled `dist/routes/http.js` directly.)
 
 ## Commands
 
 ```bash
 npm install
-npm test
+npm run build                               # src/ to dist/; again after every change to src/
+npm run typecheck                           # src/ and test/, strict, no output
+npm test                                    # runs the TypeScript sources through tsx; needs no build
 npm start                                   # stdio; GITHUB_API_KEY comes from the environment
 npm run start:http                          # HTTP on :3000: with MCP_AUTH_TOKEN (32+ chars) on all interfaces, without it on 127.0.0.1 only
 GITHUB_API_KEY=<token> npm run inspect      # the MCP Inspector, to drive it by hand
@@ -75,12 +79,17 @@ GITHUB_API_KEY=<token> npm run inspect      # the MCP Inspector, to drive it by 
   purpose. With neither `MCP_AUTH_TOKEN` nor `HOST` set it is a local install on `127.0.0.1`, and says so.
 * **A server registered mid-session is absent until the session restarts.** The client loads its
   connectors at start.
-* **The tool list is pinned.** Add a tool without its line in `test/surface.js` and three tests
+* **The tool list is pinned.** Add a tool without its line in `test/surface.ts` and three tests
   fail. That is the design, not friction.
 * **`mockApi` fails on any request it was not told about.** If a tool makes one more call than the
   test queued, the failure reads `unexpected request #n`, and it is correct.
-* **`node --test` runs `helpers.js` and `surface.js` too.** They define no tests; the runner's total
-  counts them.
+* **`dist/` can be stale.** `npm start`, `npm run start:http`, `npm run inspect` and every client run
+  `dist/`, not `src/`. After a change, `npm test` passes on the sources while a client still runs the old
+  build until `npm run build` runs again.
+* **Imports say `.js`.** A relative import in `src/` or `test/` names `./x.js` for the file `x.ts`;
+  NodeNext resolves it to the source, and the compiled output keeps the specifier it needs.
+* **The test total counts test files only.** `npm test` runs `test/*.test.ts`; `helpers.ts` and
+  `surface.ts` are imported, not run, so the total no longer includes them as it did under `node --test`.
 * **GitHub answers 404 for a private repository the token cannot see**, so a 404 can mean
   "not visible", not "does not exist". The refusal says so.
 * **A tool file's name is its tool's name.** Renaming the file is renaming the tool, which is a

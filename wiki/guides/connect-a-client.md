@@ -14,7 +14,8 @@ can do whatever you granted it.
 ## 2. Register the server
 
 The repository is private and the package is not published, so the client runs the server by path.
-Clone the repository, run `npm install` once, then add the server to the client.
+Clone the repository, run `npm install` and `npm run build` once, then add the server to the client. The
+client runs the compiled `dist/index.js`; build again after pulling a change.
 
 **Claude Desktop** — edit `claude_desktop_config.json`:
 
@@ -26,7 +27,7 @@ Clone the repository, run `npm install` once, then add the server to the client.
   "mcpServers": {
     "lxagents-github": {
       "command": "node",
-      "args": ["/absolute/path/to/github/src/index.js"],
+      "args": ["/absolute/path/to/github/dist/index.js"],
       "env": { "GITHUB_API_KEY": "<your GitHub token>" }
     }
   }
@@ -38,7 +39,7 @@ Clone the repository, run `npm install` once, then add the server to the client.
 ```bash
 claude mcp add lxagents-github \
   --env GITHUB_API_KEY=<your GitHub token> \
-  -- node /absolute/path/to/github/src/index.js
+  -- node /absolute/path/to/github/dist/index.js
 ```
 
 Or commit a project `.mcp.json` that reads the token from the environment instead of holding it:
@@ -48,7 +49,7 @@ Or commit a project `.mcp.json` that reads the token from the environment instea
   "mcpServers": {
     "lxagents-github": {
       "command": "node",
-      "args": ["/absolute/path/to/github/src/index.js"],
+      "args": ["/absolute/path/to/github/dist/index.js"],
       "env": { "GITHUB_API_KEY": "${GITHUB_TOKEN}" }
     }
   }

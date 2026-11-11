@@ -10,8 +10,8 @@ resources, and two transports: stdio and HTTP. See [What this server does not ex
 | Field | Value |
 |---|---|
 | `name` | `lxagents-github` |
-| `version` | from `package.json`, read at import by `src/config/version.js` |
-| transport | stdio by default (`src/index.js`); HTTP with `MCP_TRANSPORT=http` (`src/routes/http.js`): a server install needs `Authorization: Bearer <MCP_AUTH_TOKEN>` on every route but `GET /healthz`; a local install, on loopback with no token, needs a request addressed to loopback |
+| `version` | from `package.json`, read at import by `src/config/version.ts` |
+| transport | stdio by default (`src/index.ts`); HTTP with `MCP_TRANSPORT=http` (`src/routes/http.ts`): a server install needs `Authorization: Bearer <MCP_AUTH_TOKEN>` on every route but `GET /healthz`; a local install, on loopback with no token, needs a request addressed to loopback |
 
 `initialize` also returns `instructions`: that every tool needs `GITHUB_API_KEY` in the server's environment, that
 a repository is named `owner/name`, and that tools which delete or merge are destructive and should
@@ -22,13 +22,13 @@ be confirmed with the owner first.
 ### Naming
 
 A tool is `{thing}_{action}`: `repo_create`, `branch_list`, `pr_merge`. The module that defines it
-is the same name in kebab case, `src/controllers/pr-merge.js`.
+is the same name in kebab case, `src/controllers/pr-merge.ts`.
 
 ### Addressing a repository
 
 Every tool that acts on a repository takes one `repo` argument, written `owner/name`. The two that
 cannot are `repo_create`, which has no repository yet, and `repo_search`, which looks across all of
-them. `repo` is parsed once, in `src/models/address.js`, and a value that is not exactly two valid names is
+them. `repo` is parsed once, in `src/models/address.ts`, and a value that is not exactly two valid names is
 refused before any request.
 
 ### Results
@@ -51,7 +51,7 @@ and `has_more`. Ask for the next page while `has_more` is true.
 | `update` | Changes something that exists | idempotent |
 | `destroy` | Deletes, overwrites or merges | destructive, idempotent |
 
-All four set `openWorldHint`, because every tool talks to GitHub. `test/surface.js` pins every
+All four set `openWorldHint`, because every tool talks to GitHub. `test/surface.ts` pins every
 tool's kind, and a test holds the annotations to it.
 
 ### Failures

@@ -18,14 +18,14 @@ tags, releases, issues, pull requests and Actions workflows — through the GitH
   both transports, read when a tool is called. `MCP_AUTH_TOKEN` is the access token a client presents to
   the HTTP transport of a server install (at least 32 characters, never sent to GitHub); a local install and
   stdio do not need it.
-- **Requirements:** Node >= 20. ESM, no build step.
+- **Requirements:** Node >= 20. TypeScript (ESM), compiled to `dist/` by `npm run build`.
 
 ## Key features
 
 - **One module, one tool.** A tool is a file in `src/controllers/` named after it; the registry finds it
   and nothing else needs editing. A test holds files and tools together in both directions.
 - **One place builds URLs.** A repository, a branch or tag name and a file path are validated and
-  percent-encoded in `src/models/address.js` and joined into a URL only in `src/services/api.js`, so an argument cannot steer a call at another endpoint.
+  percent-encoded in `src/models/address.ts` and joined into a URL only in `src/services/api.ts`, so an argument cannot steer a call at another endpoint.
 - **The key never leaves its header.** It is not an argument, it is read per call, and it is
   removed from every message the server can produce — refusals and crashes alike. Over HTTP a request
   without the access token is refused before anything is read, and the access token is never sent to GitHub.
@@ -43,8 +43,12 @@ tags, releases, issues, pull requests and Actions workflows — through the GitH
 
 ```bash
 npm install
+npm run build
 npm test
 ```
+
+`npm run build` compiles `src/` to `dist/`, which is what `npm start`, `npm run start:http` and a client
+run. Build again after every change to `src/`; the tests run the TypeScript sources and need no build.
 
 Serve it to an MCP client over stdio, with the GitHub key in the environment:
 
@@ -83,7 +87,7 @@ client**. For Claude Desktop, in `claude_desktop_config.json`:
   "mcpServers": {
     "lxagents-github": {
       "command": "node",
-      "args": ["/absolute/path/to/github/src/index.js"],
+      "args": ["/absolute/path/to/github/dist/index.js"],
       "env": { "GITHUB_API_KEY": "<your GitHub token>" }
     }
   }
