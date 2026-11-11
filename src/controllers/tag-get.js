@@ -1,6 +1,7 @@
 /** Read one tag, following an annotated tag to what it points at. */
 import { z } from "zod";
-import { github, parseRepo, refName, refPath } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo, refName, refPath } from "../models/address.js";
 import { Refused } from "../utils/errors.js";
 import { READ, repoArg } from "../models/schemas.js";
 import { expectBody } from "../models/shapes.js";

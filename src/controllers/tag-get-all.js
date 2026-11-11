@@ -1,6 +1,8 @@
 /** List a repository's tags. */
 import { z } from "zod";
-import { github, pageQuery, paging, parseRepo } from "../services/api.js";
+import { github } from "../services/api.js";
+import { pageQuery, paging } from "../models/paging.js";
+import { parseRepo } from "../models/address.js";
 import { READ, pagingArgs, pagingOut, repoArg } from "../models/schemas.js";
 
 export const TOOL = {

@@ -1,6 +1,7 @@
 /** Delete a tag. */
 import { z } from "zod";
-import { github, parseRepo, refName, refPath } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo, refName, refPath } from "../models/address.js";
 import { DESTROY, repoArg } from "../models/schemas.js";
 
 export const TOOL = {

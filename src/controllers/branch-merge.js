@@ -1,6 +1,7 @@
 /** Merge one branch into another, without a pull request. */
 import { z } from "zod";
-import { github, parseRepo, refName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo, refName } from "../models/address.js";
 import { optionalText } from "../models/args.js";
 import { DESTROY, repoArg } from "../models/schemas.js";
 import { firstLine, short } from "../utils/text.js";

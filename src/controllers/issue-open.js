@@ -1,6 +1,7 @@
 /** Open an issue. */
 import { z } from "zod";
-import { github, parseRepo } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo } from "../models/address.js";
 import { optionalInt, rawText, requiredText, textList } from "../models/args.js";
 import { WRITE, repoArg } from "../models/schemas.js";
 import { expectBody, namesOf } from "../models/shapes.js";

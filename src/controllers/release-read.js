@@ -1,6 +1,7 @@
 /** Read one release. */
 import { z } from "zod";
-import { github, parseRepo, refName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo, refName } from "../models/address.js";
 import { READ, repoArg } from "../models/schemas.js";
 import { findReleaseByTag } from "../services/releases.js";
 import { describeRelease, expectBody, releaseFields, releaseShape } from "../models/shapes.js";

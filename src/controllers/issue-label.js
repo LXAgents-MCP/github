@@ -1,6 +1,7 @@
 /** Change the labels on an issue. */
 import { z } from "zod";
-import { github, parseRepo } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo } from "../models/address.js";
 import { oneOf, requiredInt, textList } from "../models/args.js";
 import { UPDATE, repoArg } from "../models/schemas.js";
 import { namesOf } from "../models/shapes.js";

@@ -1,6 +1,7 @@
 /** Delete a repository. */
 import { z } from "zod";
-import { github, parseRepo } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo } from "../models/address.js";
 import { requiredText } from "../models/args.js";
 import { Refused } from "../utils/errors.js";
 import { DESTROY, repoArg } from "../models/schemas.js";

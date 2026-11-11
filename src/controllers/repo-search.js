@@ -1,6 +1,7 @@
 /** Search repositories across GitHub. */
 import { z } from "zod";
-import { github, pageQuery, paging } from "../services/api.js";
+import { github } from "../services/api.js";
+import { pageQuery, paging } from "../models/paging.js";
 import { oneOf, requiredText } from "../models/args.js";
 import { READ, pagingArgs, pagingOut } from "../models/schemas.js";
 

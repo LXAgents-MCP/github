@@ -1,6 +1,7 @@
 /** Read one issue, and optionally its discussion. */
 import { z } from "zod";
-import { github, parseRepo } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo } from "../models/address.js";
 import { optionalFlag, requiredInt } from "../models/args.js";
 import { READ, repoArg } from "../models/schemas.js";
 import { expectBody, issueFields, issueShape } from "../models/shapes.js";

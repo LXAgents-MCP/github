@@ -1,6 +1,7 @@
 /** Fork a repository. */
 import { z } from "zod";
-import { REPO_NAME, github, parseRepo } from "../services/api.js";
+import { github } from "../services/api.js";
+import { REPO_NAME, parseRepo } from "../models/address.js";
 import { maybeFlag, optionalText } from "../models/args.js";
 import { Refused } from "../utils/errors.js";
 import { WRITE, repoArg } from "../models/schemas.js";

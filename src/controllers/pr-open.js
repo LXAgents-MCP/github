@@ -1,6 +1,7 @@
 /** Open a pull request. */
 import { z } from "zod";
-import { github, parseRepo, refName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { parseRepo, refName } from "../models/address.js";
 import { maybeFlag, rawText, requiredText } from "../models/args.js";
 import { Refused } from "../utils/errors.js";
 import { WRITE, repoArg } from "../models/schemas.js";

@@ -1,6 +1,7 @@
 /** List what is in a directory of a repository. */
 import { z } from "zod";
-import { filePath, github, parseRepo, refName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { filePath, parseRepo, refName } from "../models/address.js";
 import { MAX_LIST_ENTRIES } from "../config/config.js";
 import { contentsPath } from "../services/contents.js";
 import { Refused } from "../utils/errors.js";

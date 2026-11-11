@@ -1,6 +1,7 @@
 /** Create a file in a repository, as a commit. */
 import { z } from "zod";
-import { filePath, github, parseRepo, refName } from "../services/api.js";
+import { github } from "../services/api.js";
+import { filePath, parseRepo, refName } from "../models/address.js";
 import { rawText, requiredText } from "../models/args.js";
 import { contentsPath, encodeContent } from "../services/contents.js";
 import { WRITE, repoArg } from "../models/schemas.js";
