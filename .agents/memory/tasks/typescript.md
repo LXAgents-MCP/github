@@ -5,7 +5,7 @@ description: Migrating the server and its tests from plain JavaScript to strict 
 
 # TypeScript migration — GitHub
 
-## 2026-11-11 — in progress
+## 2026-11-11 — complete
 
 **Goal.** The owner asked for every Node.js repository to move to TypeScript, so the code carries its
 types instead of JSDoc comments that nothing checks.
@@ -31,10 +31,10 @@ for the recommended option wherever a question comes up. Baseline: 317 passing o
 
 | # | Title | Branch | PR |
 |---|---|---|---|
-| 1 | Task record | `plan/typescript` | |
-| 2 | Convert the server and its tests to TypeScript | `build/typescript` | |
-| 3 | Corrected documentation | `docs/typescript` | |
-| 4 | Release | `release/0.7.0` | |
+| 1 | Task record | `plan/typescript` | [#42](https://github.com/LXAgents-MCP/github/pull/42) |
+| 2 | Convert the server and its tests to TypeScript | `build/typescript` | [#43](https://github.com/LXAgents-MCP/github/pull/43) |
+| 3 | Corrected documentation | `docs/typescript` | [#44](https://github.com/LXAgents-MCP/github/pull/44) |
+| 4 | Release | `release/0.7.0` | [#45](https://github.com/LXAgents-MCP/github/pull/45) |
 
 Branches stacked: task 1 from `master`, task `k` from task `k-1`. `gitlab`, `cli` and `template` run
 their own chains; no chain depends on another.
@@ -114,4 +114,4 @@ files, which the discovery protocol does not let this task edit.
 
 Landed: `package.json` and the lockfile's own version are `0.7.0`; `wiki/logs/0/7/0/CHANGELOG.md` and its row in
 `logs-index.md`, newest first; `memory/state/repository-state.md` names the version. No tag, nothing
-published. The `PR` column is filled by a closing commit on this branch once every pull request is open.
+published. The `PR` column was filled by a closing commit on this branch once every pull request was open, and the record marked complete.
