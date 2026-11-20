@@ -38,10 +38,10 @@ Commits, a bulleted body, and the one `Co-Authored-By` trailer.
 
 | # | Title | Branch | PR |
 |---|---|---|---|
-| 1 | Task record | `plan/rust` | |
-| 2 | Rewrite the server and its tests in Rust | `refactor/rust` | |
-| 3 | Corrected documentation | `docs/rust` | |
-| 4 | Release | `release/0.8.0` | |
+| 1 | Task record | `plan/rust` | #46 |
+| 2 | Rewrite the server and its tests in Rust | `refactor/rust` | #47 |
+| 3 | Corrected documentation | `docs/rust` | #48 |
+| 4 | Release | `release/0.8.0` | #49 |
 
 Branches stacked: task 1 from `master`, task `k` from task `k-1`. `gitlab`, `cli` and `template` run
 their own chains; no chain depends on another.
