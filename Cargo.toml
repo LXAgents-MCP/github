@@ -1,6 +1,6 @@
 [package]
 name = "lxagents-github"
-version = "0.7.0"
+version = "0.8.0"
 edition = "2024"
 rust-version = "1.88"
 description = "MCP server that gives an LLM access to GitHub — repositories, branches, files, commits, tags, releases, issues, pull requests and Actions workflows — through the GitHub REST API. Stdio, or HTTP behind an access token."
