@@ -4,7 +4,7 @@ An MCP server that gives an LLM access to **GitHub** — repositories, branches,
 tags, releases, issues, pull requests and Actions workflows — through the GitHub REST API.
 
 - **Server id:** `lxagents-github`
-- **Package:** `@lxagents-mcp/github` — private; not published to npm.
+- **Package:** the Cargo package `lxagents-github` — `publish = false`; not published to crates.io.
 - **Transport:** stdio by default: the client starts the server as a subprocess and talks to it through
   a pipe. HTTP with `MCP_TRANSPORT=http`, on port 3000. **A local install** needs no access token: with
   `MCP_AUTH_TOKEN` unset it listens on `127.0.0.1` only and serves requests addressed to this machine.
@@ -18,14 +18,15 @@ tags, releases, issues, pull requests and Actions workflows — through the GitH
   both transports, read when a tool is called. `MCP_AUTH_TOKEN` is the access token a client presents to
   the HTTP transport of a server install (at least 32 characters, never sent to GitHub); a local install and
   stdio do not need it.
-- **Requirements:** Node >= 20. TypeScript (ESM), compiled to `dist/` by `npm run build`.
+- **Requirements:** Rust 1.88 or later (edition 2024). Compiled to one binary, `target/release/lxagents-github`, by
+  `cargo build --release`.
 
 ## Key features
 
 - **One module, one tool.** A tool is a file in `src/controllers/` named after it; the registry finds it
   and nothing else needs editing. A test holds files and tools together in both directions.
 - **One place builds URLs.** A repository, a branch or tag name and a file path are validated and
-  percent-encoded in `src/models/address.ts` and joined into a URL only in `src/services/api.ts`, so an argument cannot steer a call at another endpoint.
+  percent-encoded in `src/models/address.rs` and joined into a URL only in `src/services/api.rs`, so an argument cannot steer a call at another endpoint.
 - **The key never leaves its header.** It is not an argument, it is read per call, and it is
   removed from every message the server can produce — refusals and crashes alike. Over HTTP a request
   without the access token is refused before anything is read, and the access token is never sent to GitHub.
@@ -36,43 +37,43 @@ tags, releases, issues, pull requests and Actions workflows — through the GitH
   its reset time, a name already taken: each is a sentence, not a status code.
 - **Bounded output.** Lists page at up to 100; a file, a log or a diff is cut at a stated limit and
   says it was cut.
-- **Nothing leaves the machine in the tests.** `fetch` is replaced and any request a test did not
-  expect fails it; the one exception, a redirect check, talks to two servers on loopback.
+- **Nothing leaves the machine in the tests.** The network is a `MockApi` handed to each tool through its
+  `Ctx`, and any request a test did not expect fails it; the one exception, a redirect check, talks to two servers on loopback.
 
 ## Quick start
 
 ```bash
-npm install
-npm run build
-npm test
+cargo build --release
+cargo test
 ```
 
-`npm run build` compiles `src/` to `dist/`, which is what `npm start`, `npm run start:http` and a client
-run. Build again after every change to `src/`; the tests run the TypeScript sources and need no build.
+`cargo build --release` compiles `src/` to `target/release/lxagents-github`, which is what the commands below
+and a client run. Build again after every change to `src/`; `cargo test` builds what it needs itself.
 
 Serve it to an MCP client over stdio, with the GitHub key in the environment:
 
 ```bash
-GITHUB_API_KEY=<token> npm start
+GITHUB_API_KEY=<token> target/release/lxagents-github
 ```
 
 Or over HTTP on this machine only, a local install, with no access token:
 
 ```bash
-GITHUB_API_KEY=<token> npm run start:http   # http://127.0.0.1:3000/mcp, this machine only
+GITHUB_API_KEY=<token> MCP_TRANSPORT=http target/release/lxagents-github   # http://127.0.0.1:3000/mcp, this machine only
 ```
 
 Or over HTTP as a server, where clients present an access token of your making (see
 [Set up HTTP with two tokens](wiki/guides/setup-http-token.md)):
 
 ```bash
-GITHUB_API_KEY=<token> MCP_AUTH_TOKEN=$(openssl rand -hex 32) npm run start:http   # port 3000, all interfaces
+GITHUB_API_KEY=<token> MCP_AUTH_TOKEN=$(openssl rand -hex 32) MCP_TRANSPORT=http \
+  target/release/lxagents-github   # port 3000, all interfaces
 ```
 
 Or drive it by hand with the MCP Inspector:
 
 ```bash
-GITHUB_API_KEY=<token> npm run inspect
+GITHUB_API_KEY=<token> npx @modelcontextprotocol/inspector target/release/lxagents-github
 ```
 
 Full instructions are in [`wiki/environments/setup.md`](wiki/environments/setup.md).
@@ -86,8 +87,7 @@ client**. For Claude Desktop, in `claude_desktop_config.json`:
 {
   "mcpServers": {
     "lxagents-github": {
-      "command": "node",
-      "args": ["/absolute/path/to/github/dist/index.js"],
+      "command": "/absolute/path/to/github/target/release/lxagents-github",
       "env": { "GITHUB_API_KEY": "<your GitHub token>" }
     }
   }

@@ -2,27 +2,25 @@
 
 The server runs in a container over **stdio** by default, and over HTTP when told to. The image is for a
 client that can spawn `docker run -i`, for one that connects to a published port, and for a host that
-cannot run Node 20.
+has no Rust toolchain.
 
 > **This image has not been built.** The environment this was written in had a Docker client and no
 > daemon, so neither the `Dockerfile` nor the commands on this page have been run as written. What was
-> checked instead: every `COPY` source exists and is not excluded by `.dockerignore`; both stages'
-> steps — `npm ci --ignore-scripts` and `npm run build`, then `npm ci --ignore-scripts --omit=dev` beside
-> the compiled `dist/` — were replayed in scratch directories holding only what the image copies, and the
-> result printed its version (an earlier, single-stage image's tree served every tool over a real stdio pipe); and
-> `SIGTERM` is tested. Not checked: the base image, the `Dockerfile`'s syntax, and `USER node` in a real
-> container. Build it once and run the check at the end of this page before relying on it.
+> checked instead: every `COPY` source exists and is not excluded by `.dockerignore`, and the build
+> stage's step, `cargo build --release --locked`, is the same build the repository's own checks run; and
+> `SIGTERM` is tested. Not checked: the base images, the musl build inside `rust:1-alpine`, the
+> `Dockerfile`'s syntax, and `USER nobody` in a real container. Build it once and run the check at the end of this page before relying on it.
 
 ## What a container is for here
 
-* **A pinned toolchain.** `node:22-alpine` instead of whatever is on the host. For exact
-  reproducibility, pin the base image by digest.
-* **A clean dependency tree.** `npm ci --ignore-scripts --omit=dev` from the lockfile. `npm ci` fails
+* **A pinned toolchain.** `rust:1-alpine` instead of whatever is on the host. For exact
+  reproducibility, pin the base images by digest.
+* **A clean dependency tree.** `cargo build --release --locked` from `Cargo.lock`. `--locked` fails
   rather than resolving something the lockfile does not contain.
-* **A build that leaves nothing behind.** A first stage installs the whole tree, compiler included, and runs
-  `npm run build`; the image is a second stage that copies only the compiled `dist/` from it, so neither
-  the TypeScript compiler nor the sources ship.
-* **A non-root process.** The image ends as `USER node`.
+* **A build that leaves nothing behind.** A first stage compiles a static musl binary; the image is a
+  second stage, bare `alpine:3` (its CA bundle included), that copies only that binary to
+  `/usr/local/bin/lxagents-github`, so neither the toolchain nor the sources ship.
+* **A non-root process.** The image runs as `USER nobody`.
 * **Isolation from the host.** The server reads no host file and runs no command either way; the
   container also keeps it off the host's file system altogether.
 
@@ -32,11 +30,11 @@ it is in the container's environment, where anyone who can `docker inspect` the 
 ## Build
 
 ```bash
-VERSION=$(node -p "require('./package.json').version")
+VERSION=$(sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)
 docker build -t "lxagents-github:$VERSION" .
 ```
 
-Tag it with the version in `package.json` rather than `latest`. The image's job is to be reproducible,
+Tag it with the version in `Cargo.toml` rather than `latest`. The image's job is to be reproducible,
 and `latest` is the one tag that cannot be.
 
 ## Run
@@ -91,7 +89,7 @@ docker run --rm -p 127.0.0.1:3000:3000 -e MCP_TRANSPORT=http \
 characters. **A container is a server install:** with the access token set, the server inside it listens on every
 interface on port 3000 by default, which is what lets a published port reach it, so `HOST` is not set. Without the
 token it would listen on the container's own loopback, which `-p` cannot reach, and it says so at start; with
-`HOST=0.0.0.0` and no token it refuses to start. A local install with no token is `npm run start:http` on the
+`HOST=0.0.0.0` and no token it refuses to start. A local install with no token is `MCP_TRANSPORT=http target/release/lxagents-github` on the
 machine itself, not a container. `127.0.0.1:` in `-p` keeps the port reachable from this host only, and leaving it off publishes the port to the
 network. Clients then connect to `http://127.0.0.1:3000/mcp` with `Authorization: Bearer <MCP_AUTH_TOKEN>`; see
 [Set up HTTP with two tokens](../guides/setup-http-token.md). Put TLS in front before publishing the port beyond
@@ -101,13 +99,12 @@ the host. **This path, like the rest of the image, has not been run in a contain
 
 | Path | Why |
 |---|---|
-| `dist/` | The server, compiled from `src/` in the build stage. |
-| `package.json`, `package-lock.json` | Dependency resolution, and the version the server reports. |
-| `node_modules/` | The production tree: the MCP SDK and zod. Installed in the image, never copied in. |
+| `/usr/local/bin/lxagents-github` | The server, one static binary compiled from `src/` in the build stage, its version fixed in at build time. |
+| `/etc/ssl/certs/ca-certificates.crt` | Already in `alpine:3`; the server verifies GitHub's TLS certificate against it. |
 
-`.dockerignore` keeps the rest out: `test`, a local `dist`, `wiki`, `.agents`, `.claude`, `AGENTS.md`, `README.md`,
+`.dockerignore` keeps the rest out of the build context: `test`, a local `target`, `wiki`, `.agents`, `.claude`, `AGENTS.md`, `README.md`,
 `.git`, any `.env` file and local noise. **The image therefore cannot run its own test suite** —
-`npm test` needs `test/`, and the suite is a gate on the repository, not on the artifact.
+`cargo test` needs `test/`, and the suite is a gate on the repository, not on the artifact.
 
 ## No `EXPOSE` and no compose file
 
@@ -117,19 +114,19 @@ is no compose file either: a stdio server is not a service, and `docker compose 
 no stdin attached, so it would exit at once. A deployment — a registry, an orchestrator, a schedule — is
 the owner's decision, not this repository's.
 
-There is also no `ENTRYPOINT`. The whole default is `CMD ["node", "dist/index.js"]`, so the base image's
-own entrypoint stays and a command after the image name runs as written. An `ENTRYPOINT` of ours would
-turn `docker run <image> node dist/index.js --version` into `node dist/index.js node dist/index.js --version`.
+There is also no `ENTRYPOINT`. The whole default is `CMD ["lxagents-github"]`, so a command after the
+image name runs as written. An `ENTRYPOINT` of ours would turn `docker run <image> lxagents-github --version`
+into `lxagents-github lxagents-github --version`.
 
 ## Verifying an image
 
 ```bash
-docker run --rm "lxagents-github:$VERSION" node dist/index.js --version
+docker run --rm "lxagents-github:$VERSION" lxagents-github --version
 ```
 
-Prints `lxagents-github <version>` on stderr and exits 0. That shows the entrypoint resolves, the
-dependencies load and the version is read, and it needs no token and no stdin. To check the tools, point
-a client at the image as above and list them, or run `npm test` in a checkout.
+Prints `lxagents-github <version>` on stderr and exits 0. That shows the binary is on the `PATH`, runs on
+the runtime image as `nobody`, and carries its version, and it needs no token and no stdin. To check the tools, point
+a client at the image as above and list them, or run `cargo test` in a checkout.
 
 ## Related pages
 

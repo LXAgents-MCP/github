@@ -25,7 +25,7 @@ Nothing from the shared set is copied here.
 
 | Path | Holds |
 |---|---|
-| `src/` | The server: `index.js` and one folder per role — `routes/`, `controllers/`, `services/`, `models/`, `utils/`, `config/` (see [Where the code lives](../../wiki/information/architecture.md#where-the-code-lives)). `src/controllers/` is the tool surface; everything else in `src/` is shared by it. |
+| `src/` | The server: `main.rs` (the binary), `lib.rs` and one folder per role — `routes/`, `controllers/`, `services/`, `models/`, `utils/`, `config/` (see [Where the code lives](../../wiki/information/architecture.md#where-the-code-lives)). `src/controllers/` is the tool surface; everything else in `src/` is shared by it. |
 | `test/` | The server's tests. |
 | `.agents/` | This repository's own rules, indexes, agent wiki and memory. |
 | `wiki/` | Human documentation, and the release logs under `wiki/logs/`. |
@@ -35,66 +35,72 @@ Full orientation: [`../wiki/context/repository-map.md`](../wiki/context/reposito
 
 ## Stack and commands
 
-Plain JavaScript, Node ESM, Node >= 20. **There is no build step** — do not add one, and do not
-introduce TypeScript, a bundler, or a transpiler without agreement.
+Rust, edition 2024, `rust-version = "1.88"`: one Cargo package with a library and the `lxagents-github`
+binary. `cargo build --release` produces `target/release/lxagents-github`; nothing compiled is committed.
+Do not introduce another language, a second crate, or a build script without agreement.
 
 | Task | Command |
 |---|---|
-| Install | `npm install` |
-| Test | `npm test` |
-| Run (stdio) | `npm start` |
-| Run (HTTP) | `npm run start:http` |
-| Inspect the MCP surface | `npm run inspect` |
+| Build | `cargo build --release` |
+| Test | `cargo test` |
+| Lint | `cargo clippy --all-targets -- -D warnings` |
+| Format | `cargo fmt` (check: `cargo fmt --check`) |
+| Run (stdio) | `target/release/lxagents-github` |
+| Run (HTTP) | `MCP_TRANSPORT=http target/release/lxagents-github` |
+| Inspect the MCP surface | `npx @modelcontextprotocol/inspector target/release/lxagents-github` |
 | Build the image | `docker build -t "lxagents-github:$VERSION" .` — it has never been built here |
 
-**`npm install` before `npm test`, once per checkout.** A fresh clone has no `node_modules`, and
-the suite does not say so: the test files fail with `ERR_MODULE_NOT_FOUND`, which reads as broken
-code rather than an uninstalled tree. Install first, then trust the number.
+**A client runs the built binary, not the sources.** `cargo test` compiles what it needs, but a client
+configured with `target/release/lxagents-github` keeps serving the old build until `cargo build --release`
+runs again.
 
 ## Code conventions the codebase already follows
 
-* **ESM only.** `import`/`export`, `.js` extensions in relative specifiers, no `require`.
 * **Nothing writes to stdout.** On stdio, stdout *is* the JSON-RPC channel. Diagnostics go through
-  `src/utils/log.js`, which writes to stderr, on the HTTP transport too. There is no `console.log` anywhere
-  in `src/`.
-* **One `McpServer` per connection.** `createServer()` builds a fresh instance; never hoist one to
-  module scope.
-* **Every URL is built in `src/services/api.js`.** A repository, a reference and a file path are validated
-  and percent-encoded in `src/models/address.js`, and a tool never concatenates its own.
+  `src/utils/log.rs`, which writes to stderr, on the HTTP transport too. There is no `print!` or `println!`
+  anywhere in `src/`.
+* **One `GithubServer` per request.** The HTTP transport's factory builds a fresh instance from the shared
+  `Ctx`; never hoist one to a static.
+* **Every URL is built in `src/services/api.rs`.** A repository, a reference and a file path are validated
+  and percent-encoded in `src/models/address.rs`, and a tool never concatenates its own.
 * **Arguments are checked before the token is read**, so a bad call costs no request and the
   refusal names the argument.
-* **The GitHub key is read per call**, through `src/services/auth.js` and nowhere else, from `GITHUB_API_KEY`, on
+* **The GitHub key is read per call**, through `src/services/auth.rs` and nowhere else, from `GITHUB_API_KEY`, on
   both transports. It is never an argument, and is scrubbed from every message — refusals and crashes
   alike. **The access token is a different secret**: `MCP_AUTH_TOKEN` guards the HTTP door of a server
   install, is compared and dropped, and is never used against GitHub or read over stdio. A local install,
-  on loopback with no token, is guarded by the `Host` and `Origin` checks in `src/routes/http.js` instead.
-* **A failure is a thrown `Refused`** that says what to do next. A tool never returns an error
-  payload, and never lets a bare exception reach the client as its explanation.
+  on loopback with no token, is guarded by the `Host` and `Origin` checks in `src/routes/http.rs` instead.
+* **Everything from outside comes through `Ctx`** (`src/services/context.rs`): the environment, the network
+  backend and sleep. A handler never reads `std::env` or opens a connection itself.
+* **A failure is a returned `Err(Refused)`** that says what to do next. A tool never returns an error
+  payload; anything else is a bug, a panic, which the dispatcher reports as an internal error rather than
+  as its explanation.
 * **Comments explain why, not what.**
 
 ## Testing
 
-Every behavioural change ships with a test in `test/`, using `node:test` and
-`node:assert/strict`. The suite must pass before any commit, and **no test reaches GitHub or any host
-beyond this machine**: `fetch` is replaced by `mockApi` in `test/helpers.js`, which fails the test on
-any request it was not told to expect. The one exception is the redirect test in `test/api.test.js`,
-which uses the real `fetch` against two servers on loopback, to show that the token is not sent to a
-second host.
+Every behavioural change ships with a test in `test/`, one integration binary rooted at `test/main.rs`
+and run by `cargo test`. The suite must pass before any commit, and **no test reaches GitHub or any host
+beyond this machine**: each test hands the tools a `Ctx` whose backend is `MockApi` in `test/helpers.rs`,
+which fails the test on any request it was not told to expect. The one exception is the redirect test in
+`test/api.rs`, which uses the real `reqwest` backend against two servers on loopback, to show that the token
+is not sent to a second host.
 
 Each tool is tested for: a success that asserts the exact request — method, URL, query, body — and
-checks the payload against the tool's own output schema with `expectOutput`; at least one failure
-status; and argument validation that refuses before any request. `test/surface.js` is the one
+checks the payload against the tool's own output schema with `expect_output`; at least one failure
+status; and argument validation that refuses before any request. `test/surface.rs` is the one
 place the tool list is pinned. Prefer a test that pins an invariant over one that pins a string.
 
-`node --test` also executes the two support files under `test/` (`helpers.js`, `surface.js`),
-which define no tests, so the runner's total includes them.
+The suite lives in `test/`, not Cargo's default `tests/`: `Cargo.toml` names it (`[[test]] suite`) and
+sets `autotests = false`, so a file there is compiled only when `test/main.rs` declares it as a module.
 
 ## What must not be introduced
 
-* A build step, or any compiled output committed to the repository.
-* A dependency added to serve one call site. The runtime dependencies are the MCP SDK and zod; a
-  third needs its own record under `.agents/memory/decisions/` before it lands, not after.
-* A transport other than stdio and the HTTP one in `src/routes/http.js`, a listener anywhere else, a route
+* Any compiled output committed to the repository, or a build script (`build.rs`).
+* A dependency added to serve one call site. The runtime dependencies are the set in `Cargo.toml`
+  (rmcp, axum, reqwest with rustls, tokio and their helpers), recorded in
+  [`../memory/decisions/rust-runtime-dependencies.md`](../memory/decisions/rust-runtime-dependencies.md); another needs its own record under `.agents/memory/decisions/` before it lands, not after.
+* A transport other than stdio and the HTTP one in `src/routes/http.rs`, a listener anywhere else, a route
   beyond `POST /mcp` and `GET /healthz`, a way for an HTTP request to get through without the access
   token when one is set, HTTP starting without one on an address that is not loopback, a local install
   without the `Host` and `Origin` checks, a client's bearer used as the GitHub key (or the other way round),
@@ -106,16 +112,16 @@ which define no tests, so the runner's total includes them.
   `--help` and `--version`; another of either is a change to a public surface, not an implementation
   detail.
 * A tool argument that carries a credential, or any way for a caller to choose the host. The API
-  base is a constant in `src/config/config.js`, which is also why GitHub Enterprise is not supported.
-* A URL built anywhere but `src/services/api.js`.
+  base is a constant in `src/config/config.rs`, which is also why GitHub Enterprise is not supported.
+* A URL built anywhere but `src/services/api.rs`.
 * A third documentation tree. `wiki/` and `.agents/wiki/` are the only two.
 * `content/`, or any copy of the shared set. This repository reads it through the connector.
 
 ## Deployment
 
-Not published: `package.json` is `private`, and the client runs the server by path
-(`node src/index.js`) with the key in the `env` block of its own configuration, or runs it as an
+Not published: `Cargo.toml` sets `publish = false`, and the client runs the built binary by path
+(`target/release/lxagents-github`) with the key in the `env` block of its own configuration, or runs it as an
 HTTP service the client reaches with an access token. Making it
-installable from npm is a one-line change the owner approves, and not one to make in passing. A
+installable from crates.io is a one-line change the owner approves, and not one to make in passing. A
 `Dockerfile` builds an image that speaks stdio for a client that runs `docker run -i`, or HTTP when
 told to; publishing it to a registry is the owner's decision as well.

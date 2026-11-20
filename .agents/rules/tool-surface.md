@@ -16,31 +16,31 @@ inside it.
 | Change to… | Effect |
 |---|---|
 | `src/controllers/**` | Changes the surface. A new tool is a **minor** release; a rename, a removal or a changed argument is a **major** one. |
-| `src/services/api.js`, `src/services/client.js`, `src/services/failure.js`, `src/models/address.js`, `src/utils/render.js`, `src/routes/server.js`, `src/models/args.js` | Changes how every tool behaves. A release only when a client can see the difference. |
+| `src/services/api.rs`, `src/services/client.rs`, `src/services/failure.rs`, `src/models/address.rs`, `src/utils/render.rs`, `src/routes/server.rs`, `src/models/args.rs` | Changes how every tool behaves. A release only when a client can see the difference. |
 | `.agents/**`, `wiki/**`, `test/**` | Local. Published to nobody. |
 
 ## The file contract
 
-* The file name is the tool name in kebab case: `repo-create.js` is `repo_create`. The registry
+* The file name is the tool name in snake case: `repo_create.rs` is `repo_create`. The registry
   test holds files and tools together in both directions, so a stray file, or a tool in the wrong
   file, fails.
-* A module exports `TOOL` and `handle(args)`. A module that exports neither is skipped, so a helper
-  dropped into `src/controllers/` is never callable — but helpers belong in `src/`, not here.
-* `TOOL` has `name`, `description`, `inputSchema`, `outputSchema` and `annotations`, all required.
+* A module exports `def()` and `handle`, and is registered with one line in `src/controllers/mod.rs`. A
+  module that is not registered is never callable — but helpers belong elsewhere in `src/`, not here.
+* `def()` returns a `ToolDef` with `name`, `description`, `input_schema`, `output_schema` and `annotations`, all required.
   The registry test fails on a tool without a useful description, an output schema, or the four
   hints.
-* `handle` returns `{ payload, ok }`. The payload is a one-sentence `summary` plus fields that
-  satisfy the `outputSchema`, which `expectOutput` in `test/helpers.js` checks. A failure is a
-  thrown `Refused`.
-* Two modules with one tool name fail at boot, not at first call.
+* `handle` takes `(&Ctx, &Args)` and returns an `Outcome`: a one-sentence `summary` plus fields that
+  satisfy the output schema, which `expect_output` in `test/helpers.rs` checks, and `ok`. A failure is a
+  returned `Err(Refused)`.
+* Two registrations with one tool name fail at boot, not at first call.
 
 ## Arguments and results
 
 * `repo` is the first argument of every tool that acts on a repository: `owner/name`, parsed by
-  `parseRepo`. Only `repo_create` and `repo_search` take none.
+  `parse_repo`. Only `repo_create` and `repo_search` take none.
 * Validate arguments before the token is read.
-* Build every URL through `src/services/api.js`. A path segment that did not come from `parseRepo`,
-  `refName`/`refPath` or `filePath` has not been validated.
+* Build every URL through `src/services/api.rs`. A path segment that did not come from `parse_repo`,
+  `ref_name`/`ref_path` or `file_path` has not been validated.
 * A list takes `page` and `per_page` and returns `page`, `per_page` and `has_more`.
 * Long text — a file, a log, a diff — goes in `text`, cut to a stated limit with `truncated: true`
   when it was cut. The renderer fences it.
@@ -49,7 +49,7 @@ inside it.
 
 ## The pinned list
 
-`test/surface.js` writes out every tool and tags it `read`, `write`, `update` or `destroy`. The
+`test/surface.rs` writes out every tool and tags it `read`, `write`, `update` or `destroy`. The
 registry, protocol and stdio tests all compare against it, and the registry test holds each tool's
 annotations to its kind. Adding a tool is one line there; a tool that appears or vanishes without
 one fails three tests.
@@ -82,11 +82,12 @@ notice they get.
 2. Add `wiki/logs/{Major}/{Minor}/{Patch}/CHANGELOG.md`, with the **Clients must** line filled in:
    nothing, rename a tool they call, or move a token.
 3. Add its row to `.agents/index/logs-index.md`, newest first.
-4. Update `package.json` and the lockfile's own version.
+4. Update the version in `Cargo.toml` and the package's own entry in `Cargo.lock`.
 5. Add or change the tool's row in `wiki/reference/mcp-surface.md` **in the same commit as the
    tool**.
 
 ## Restart to see a change
 
 The registry is read once, at boot. Editing `src/controllers/` has no effect on a running process:
-restart the client or the server. `npm run inspect` shows the surface a fresh process would build.
+rebuild with `cargo build --release`, then restart the client or the server.
+`npx @modelcontextprotocol/inspector target/release/lxagents-github` shows the surface a fresh process would build.
