@@ -14,8 +14,8 @@ can do whatever you granted it.
 ## 2. Register the server
 
 The repository is private and the package is not published, so the client runs the server by path.
-Clone the repository, run `npm install` and `npm run build` once, then add the server to the client. The
-client runs the compiled `dist/index.js`; build again after pulling a change.
+Clone the repository, run `cargo build --release` once, then add the server to the client. The
+client runs the compiled binary, `target/release/lxagents-github`; build again after pulling a change.
 
 **Claude Desktop** — edit `claude_desktop_config.json`:
 
@@ -26,8 +26,7 @@ client runs the compiled `dist/index.js`; build again after pulling a change.
 {
   "mcpServers": {
     "lxagents-github": {
-      "command": "node",
-      "args": ["/absolute/path/to/github/dist/index.js"],
+      "command": "/absolute/path/to/github/target/release/lxagents-github",
       "env": { "GITHUB_API_KEY": "<your GitHub token>" }
     }
   }
@@ -39,7 +38,7 @@ client runs the compiled `dist/index.js`; build again after pulling a change.
 ```bash
 claude mcp add lxagents-github \
   --env GITHUB_API_KEY=<your GitHub token> \
-  -- node /absolute/path/to/github/dist/index.js
+  -- /absolute/path/to/github/target/release/lxagents-github
 ```
 
 Or commit a project `.mcp.json` that reads the token from the environment instead of holding it:
@@ -48,8 +47,7 @@ Or commit a project `.mcp.json` that reads the token from the environment instea
 {
   "mcpServers": {
     "lxagents-github": {
-      "command": "node",
-      "args": ["/absolute/path/to/github/dist/index.js"],
+      "command": "/absolute/path/to/github/target/release/lxagents-github",
       "env": { "GITHUB_API_KEY": "${GITHUB_TOKEN}" }
     }
   }
@@ -71,7 +69,8 @@ not there", and it looks like a broken server rather than a stale session.
 
 ## 4. Check that it is there
 
-Ask the client to list the server's tools, or run the MCP Inspector (`npm run inspect`). You should
+Ask the client to list the server's tools, or run the MCP Inspector
+(`npx @modelcontextprotocol/inspector target/release/lxagents-github`). You should
 see the tools in [MCP surface](../reference/mcp-surface.md), all taking a `repo` as `owner/name`
 except `repo_create` and `repo_search`.
 

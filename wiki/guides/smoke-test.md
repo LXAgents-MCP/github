@@ -79,7 +79,7 @@ jobs:
 Run this once if you will use the HTTP transport. It needs only the server, a GitHub key and an access token;
 the walk above then works unchanged through a client registered as in
 [Set up HTTP with two tokens](setup-http-token.md). Start the server with both variables set:
-`GITHUB_API_KEY=<key> MCP_AUTH_TOKEN=$(openssl rand -hex 32) npm run start:http`, and keep the access token.
+`GITHUB_API_KEY=<key> MCP_AUTH_TOKEN=$(openssl rand -hex 32) MCP_TRANSPORT=http target/release/lxagents-github`, and keep the access token.
 
 | # | Do | Expect |
 |---|---|---|
@@ -120,7 +120,7 @@ differently, the tool named is the one to fix.
 | `workflow_status` | `per_page=1` on a workflow's runs returns the newest run; a branch name with a slash works in the `branch` filter. |
 | `workflow_logs` | GitHub's 302 to a signed address is followed and the token is not sent there. A job still running gives its partial log or none; an expired log is noted; a log over 20 MB is refused with the general size message. |
 | HTTP, any tool | `GITHUB_API_KEY` reaches `api.github.com` as the bearer credential of every call, and the client's access token appears in none of them. |
-| the image | Build it, run `node dist/index.js --version` in it, connect a client with `docker run --rm -i -e GITHUB_API_KEY`, and check that `docker stop` returns at once. See [Docker](../environments/docker.md). |
+| the image | Build it, run `lxagents-github --version` in it, connect a client with `docker run --rm -i -e GITHUB_API_KEY`, and check that `docker stop` returns at once. See [Docker](../environments/docker.md). |
 
 ## Reporting what differs
 
