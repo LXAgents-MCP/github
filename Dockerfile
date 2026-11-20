@@ -1,49 +1,36 @@
 # syntax=docker/dockerfile:1
 
-# Two stages. The server is TypeScript, so the first stage installs the whole tree, compiler
-# included, and compiles `src/` to `dist/`; the second holds production dependencies and `dist/`
-# only, so neither the compiler nor the sources ship in the image.
-FROM node:22-alpine AS build
+# Two stages. The first compiles the server with the Rust toolchain against musl, so the binary is
+# static; the second is a bare Alpine image holding that one binary, so neither the toolchain nor
+# the sources ship in the image.
+FROM rust:1-alpine AS build
 
 WORKDIR /srv
 
-# Dependencies come from the lockfile only: `npm ci` fails rather than resolve something the
+# Dependencies come from the lockfile only: `--locked` fails rather than resolve something the
 # lockfile does not contain, which is the point of building an image from a versioned tree.
-# Lifecycle scripts are off, because running a dependency's install script by default is
-# supply-chain risk with nothing to offset it.
-COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts
-
-COPY tsconfig.json ./
+COPY Cargo.toml Cargo.lock ./
 COPY src ./src
-RUN npm run build
+RUN cargo build --release --locked --bin lxagents-github
 
-FROM node:22-alpine
+FROM alpine:3
 
-# `--omit=dev` keeps the compiler and the test-only tree out. `.dockerignore` leaves the tests out
-# too, so this image cannot run its own suite.
-WORKDIR /srv
+# The base image already carries the CA bundle the server verifies GitHub's certificate against,
+# so nothing is installed here.
+COPY --from=build /srv/target/release/lxagents-github /usr/local/bin/lxagents-github
 
-COPY package.json package-lock.json ./
-RUN npm ci --ignore-scripts --omit=dev
-
-# `package.json` is read at start for the version, so it stays beside `dist/`.
-COPY --from=build /srv/dist ./dist
-
-# Not root. The process speaks to GitHub and reads one file of its own; it needs nothing more.
-USER node
+# Not root. The process speaks to GitHub and reads nothing else; it needs nothing more.
+USER nobody
 
 # No EXPOSE, on purpose: the default is stdio, which has no port, and HTTP is opt-in with
-# `-e MCP_TRANSPORT=http`, published by `-p` at run time. A stdio client reaches
-# it through the container's stdin and stdout, so it runs with `docker run -i`. Without `-i`
-# Docker attaches no stdin, the server sees it closed, and exits at once.
+# `-e MCP_TRANSPORT=http`, published by `-p` at run time. A stdio client reaches it through the
+# container's stdin and stdout, so it runs with `docker run -i`. Without `-i` Docker attaches no
+# stdin, the server sees it closed, and exits at once.
 #
-# No secret is here either. A value baked into an ENV line ships to everyone who pulls the
-# image; both are passed at run time: `-e GITHUB_API_KEY` for the GitHub key, and for HTTP also
+# No secret is here either. A value baked into an ENV line ships to everyone who pulls the image;
+# both are passed at run time: `-e GITHUB_API_KEY` for the GitHub key, and for HTTP also
 # `-e MCP_AUTH_TOKEN`, the access token clients present.
 #
-# The whole default is CMD and this file sets no ENTRYPOINT, so the base image's own
-# `docker-entrypoint.sh` stays in place and a command after the image name runs as written. An
-# ENTRYPOINT of ours would turn `docker run <image> node dist/index.js --version` into
-# `node dist/index.js node dist/index.js --version`.
-CMD ["node", "dist/index.js"]
+# The whole default is CMD and this file sets no ENTRYPOINT, so a command after the image name runs
+# as written: `docker run <image> lxagents-github --version`.
+CMD ["lxagents-github"]

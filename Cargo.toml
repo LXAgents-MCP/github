@@ -1,0 +1,51 @@
+[package]
+name = "lxagents-github"
+version = "0.7.0"
+edition = "2024"
+rust-version = "1.88"
+description = "MCP server that gives an LLM access to GitHub — repositories, branches, files, commits, tags, releases, issues, pull requests and Actions workflows — through the GitHub REST API. Stdio, or HTTP behind an access token."
+license = "MIT"
+authors = ["LXAgents"]
+repository = "https://github.com/LXAgents-MCP/github"
+homepage = "https://github.com/LXAgents-MCP/github#readme"
+keywords = ["mcp", "model-context-protocol", "github", "lxagents"]
+publish = false
+autotests = false
+
+[lib]
+name = "lxagents_github"
+path = "src/lib.rs"
+
+[[bin]]
+name = "lxagents-github"
+path = "src/main.rs"
+
+[[test]]
+name = "suite"
+path = "test/main.rs"
+
+[dependencies]
+axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio"] }
+base64 = "0.23"
+bytes = "1"
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+encoding_rs = "0.8"
+futures = "0.3"
+http-body-util = "0.1"
+percent-encoding = "2"
+regex = "1"
+reqwest = { version = "0.13.5", default-features = false, features = ["rustls", "stream"] }
+rmcp = { version = "3.10.0", default-features = false, features = ["server", "macros", "transport-io", "transport-streamable-http-server"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+sha2 = "0.11"
+subtle = "2"
+tokio = { version = "1.54", features = ["rt-multi-thread", "macros", "io-std", "net", "signal", "time", "sync"] }
+tower = { version = "0.5", features = ["util"] }
+
+[dev-dependencies]
+rmcp = { version = "3.10.0", default-features = false, features = ["server", "client", "transport-io"] }
+tokio = { version = "1.54", features = ["full"] }
+
+[profile.release]
+strip = true
+lto = "thin"
