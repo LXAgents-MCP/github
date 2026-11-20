@@ -5,19 +5,19 @@ description: Current known state of LXAgents-MCP/github — what exists, what is
 
 # Repository State
 
-## 2026-11-11
+## 2026-11-20
 
-**Version `0.7.0`.** `package.json` and the lockfile carry it, and the release log is
-`wiki/logs/0/7/0/CHANGELOG.md`; earlier releases are `0/6/1`, `0/6/0`, `0/5/0`, `0/4/0`, `0/3/0`, `0/2/0` and `0/1/0`.
-0.7.0 moves the server and its tests to TypeScript compiled to `dist/`; a client now runs `dist/index.js`. No git
+**Version `0.8.0`.** `Cargo.toml` and `Cargo.lock` carry it, and the release log is
+`wiki/logs/0/8/0/CHANGELOG.md`; earlier releases are `0/7/0`, `0/6/1`, `0/6/0`, `0/5/0`, `0/4/0`, `0/3/0`, `0/2/0` and `0/1/0`.
+0.8.0 rewrites the server and its tests in Rust; a client now runs `target/release/lxagents-github`. No git
 tag was made, by decision (D3 in `tasks/forge-servers.md`, D8 in `tasks/http-token-auth.md`, T7 in
 `tasks/two-token-auth.md`, H3 in `tasks/http-defaults.md`, A3 in `tasks/src-architecture.md`, L6 in
-`tasks/local-auth-token.md`, D5 in `tasks/typescript.md`).
+`tasks/local-auth-token.md`, D5 in `tasks/typescript.md`, and in `tasks/rust.md`).
 
 **What it is.** An MCP server, stdio by default and HTTP behind an access token, `lxagents-github`, over the GitHub REST API at `api.github.com`.
-TypeScript under `strict`, Node ESM, compiled to `dist/` by `npm run build` (since the TypeScript migration, `tasks/typescript.md`); two runtime dependencies, the MCP SDK and zod, and `typescript`, `@types/node` and `tsx` for development.
+Rust (edition 2024), a library and one binary built by `cargo build --release` (since the Rust migration, `tasks/rust.md`) on `rmcp` 3.10 and `axum` 0.8; the runtime crates and why each is there are in `decisions/rust-runtime-dependencies.md`.
 
-**Surface.** One tool per module in `src/controllers/`. The full list is pinned in `test/surface.ts` and
+**Surface.** One tool per module in `src/controllers/`. The full list is pinned in `test/surface.rs` and
 described in `wiki/reference/mcp-surface.md`: repositories, branches, files and directories, commits,
 tags and releases, issues, pull requests and Actions workflows. A tool count is deliberately not stated
 here: it goes stale at the next module. `repo_create` was moved here from the `cli` server, where it
@@ -30,7 +30,7 @@ with no token, answers only requests whose `Host` and `Origin` name loopback (`d
 `MCP_TRANSPORT`, `PORT` (default 3000) and `HOST` (default `0.0.0.0` with a token, `127.0.0.1` without) are the only other variables, and the
 only flags are `--help` and `--version`.
 
-**Verified.** The suite (315 tests, run from source through `tsx`) replaces `fetch` and reaches no host beyond loopback. Every request shape is
+**Verified.** The suite (315 tests, `cargo test`) runs tools against a mock backend and reaches no host beyond loopback; `tools/list` is held to 0.7.0's golden copy. Every request shape is
 checked against GitHub's documentation and against mocks. The production-only dependency tree the image
 would install serves every tool over a real stdio pipe, and the HTTP transport is tested over real
 loopback sockets, including near-miss access tokens, the access token's absence from every request to GitHub, and real processes
@@ -39,12 +39,12 @@ that refuse to start open and that serve and stop on `SIGTERM`.
 **Not verified.** **Nothing has been exercised against live GitHub:** the environment the work was done
 in could not reach `api.github.com` with a token. The write tools are the ones to prove first, and
 `wiki/guides/smoke-test.md` is the walk and the list of behaviours the documentation leaves open. The
-`Dockerfile` has never been built: there was no Docker daemon. The HTTP transport has not
+`Dockerfile` has never been built whole: the work environment's network refused the crate download inside the build. The HTTP transport has not
 been reached from another machine, behind a proxy, or with a real GitHub key.
 
 **Not built.** No CI. No TLS, `Host` allow-list or rate limiting in the HTTP transport, and no identity per caller (decision
 `two-token-auth.md`). No GitHub Enterprise.
-Not published to npm (`private: true`). No git tag, no published image.
+Not published to crates.io (`publish = false`). No git tag, no published image.
 
 **Next.** The owner's smoke test, and whatever it finds. Anything it changes in a request is a patch
 release with its own approval.
